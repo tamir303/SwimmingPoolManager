@@ -1,45 +1,23 @@
-/**
- * App Component
- *
- * The root component of the application, defining the navigation structure using React Navigation.
- *
- * @component
- * @returns {React.ReactElement} - The main application component with navigation setup.
- *
- * ### Navigation
- * - Uses a `Stack.Navigator` to define the navigation structure.
- * - Contains the following screens:
- *   - `MainScreen`: The main landing page of the app.
- *   - `InstructorScreen`: The screen for managing instructors.
- *   - `CalendarScreen`: The screen for viewing and managing the lesson calendar.
- *
- * ### Features
- * - The `NavigationContainer` wraps the navigator, providing navigation capabilities.
- * - The `headerShown` option is set to `false` to hide headers across all screens.
- */
 import React from "react";
-import { NavigationContainer } from "@react-navigation/native";
-import { createStackNavigator } from "@react-navigation/stack";
-import MainScreen from "./src/screens/MainScreen";
-import InstructorScreen from "./src/screens/InstructorScreen";
-import CalendarScreen from "./src/screens/CalenderScreen";
+import MainScreen from "./src/screens/InstructorScreens/MainScreen";
+import InstructorScreen from "./src/screens/InstructorScreens/InstructorScreen";
+import CalendarScreen from "./src/screens/InstructorScreens/CalenderScreen";
+import AppNavigator, { AppScreen } from "./src/navigation/AppNavigator";
+import RegisterLoginScreen from "./src/screens/RegisterLoginScreen";
+import { AuthProvider } from "./src/hooks/authContext";
 
-// Create a Stack Navigator
-const Stack = createStackNavigator();
+const AppScreens: AppScreen[] = [
+  { name: "LoginRegisterScreen", component: RegisterLoginScreen },
+  { name: "MainScreen", component: MainScreen },
+  { name: "InstructorScreen", component: InstructorScreen },
+  { name: "CalendarScreen", component: CalendarScreen }
+]
 
 const App: React.FC = () => {
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        initialRouteName="MainScreen"
-        screenOptions={{ headerShown: false }}
-      >
-        {/* Define application screens */}
-        <Stack.Screen name="MainScreen" component={MainScreen} />
-        <Stack.Screen name="InstructorScreen" component={InstructorScreen} />
-        <Stack.Screen name="CalendarScreen" component={CalendarScreen} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AuthProvider>
+      <AppNavigator initialRouteName="LoginRegisterScreen" screens={AppScreens} screenOptions={{}}/>
+    </AuthProvider>
   );
 };
 

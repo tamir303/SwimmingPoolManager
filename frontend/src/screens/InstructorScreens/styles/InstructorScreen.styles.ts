@@ -1,12 +1,13 @@
 import { StyleSheet, Dimensions } from "react-native";
-import { Colors, Fonts } from "../../../utils/constants"; 
+import { Colors, Fonts } from "../../../utils/constants";
 
 const { width, height } = Dimensions.get("window");
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "#F8F9FA",
+    paddingHorizontal: 5,
   },
   // Header
   header: {
@@ -30,93 +31,17 @@ export default StyleSheet.create({
     fontSize: 20,
     color: "#333",
   },
-  // Tabs
-  tabContainer: {
-    flexDirection: "row",
-    borderBottomWidth: 1,
-    borderBottomColor: "#eee",
-    marginHorizontal: 20,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 10,
-    alignItems: "center",
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: "#6C63FF", // Purple accent
-  },
-  tabText: {
-    fontSize: 16,
-    color: "#999",
-  },
-  activeTabText: {
-    color: "#6C63FF",
-    fontWeight: "600",
-  },
   // Content
   content: {
     paddingHorizontal: 20,
+    // Extra bottom padding so that footer doesn't overlap content:
+    paddingBottom: 120,
   },
   sectionTitle: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#333",
     marginVertical: 10,
-  },
-  // Availability
-  dayRow: {
-    marginVertical: 8,
-  },
-  dayLabelContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 5,
-  },
-  dayLabel: {
-    fontSize: 14,
     color: "#333",
-  },
-  timePickersContainer: {
-    marginLeft: 10,
-    marginVertical: 5,
-  },
-  timePickersLabel: {
-    fontSize: 14,
-    marginTop: 5,
-    marginBottom: 5,
-    color: "#666",
-  },
-  // Swimming Types
-  specialtiesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    marginBottom: 10,
-  },
-  specialtyChip: {
-    backgroundColor: "#eee",
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 20,
-    margin: 5,
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  specialtyChipSelected: {
-    backgroundColor: "#6C63FF",
-  },
-  specialtyText: {
-    fontSize: 14,
-    color: "#333",
-  },
-  specialtyTextSelected: {
-    color: "#fff",
-  },
-  checkMark: {
-    color: "#fff",
-    marginLeft: 5,
-    fontSize: 14,
   },
   // Current Settings
   currentSettingsContainer: {
@@ -129,6 +54,94 @@ export default StyleSheet.create({
     fontSize: 14,
     color: "#333",
     marginVertical: 2,
+  },
+  // Availability Days Grid (two columns)
+  daysGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginVertical: 10,
+  },
+  dayBox: {
+    width: "48%",
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingVertical: 10,
+    paddingHorizontal: 10,
+    backgroundColor: "#f0f0f0",
+    borderRadius: 4,
+    marginBottom: 10,
+  },
+  dayLabel: {
+    fontSize: 16,
+    color: "#333",
+  },
+  // Time Picker Section (when a day is unsaved/active)
+  timePickerSection: {
+    marginVertical: 15,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: "#ddd",
+    borderRadius: 4,
+    paddingVertical: 10,
+    backgroundColor: "#fff",
+  },
+  timePickersLabel: {
+    fontSize: 14,
+    color: "#666",
+    marginVertical: 5,
+  },
+  // Saved Availability (final list of saved availabilities)
+  savedAvailabilityContainer: {
+    backgroundColor: "#eaeaea",
+    padding: 10,
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  savedAvailabilityText: {
+    fontSize: 14,
+    color: "#333",
+    marginVertical: 2,
+  },
+  // Swimming Types: Available (wrap container)
+  swimWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    alignItems: "center",
+    marginVertical: 10,
+  },
+  swimChip: {
+    backgroundColor: "#eee",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 4, // Removed extra rounding to match "pointy" style if desired.
+    margin: 5,
+  },
+  swimChipText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  // Chosen Swimming Types: vertical column list.
+  swimColumn: {
+    marginVertical: 10,
+  },
+  swimRowItem: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#ddd",
+  },
+  swimRowItemText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  swimRowItemIcon: {
+    fontSize: 18,
+    color: "#6C63FF",
   },
   // Buttons
   buttonRow: {

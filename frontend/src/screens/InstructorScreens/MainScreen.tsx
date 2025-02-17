@@ -5,6 +5,7 @@ import {
   FlatList,
   TouchableOpacity,
   Text,
+  SafeAreaView,
 } from "react-native";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Button } from "react-native-paper";
@@ -169,6 +170,7 @@ const MainScreen: React.FC = () => {
   );
 
   return (
+    <SafeAreaView style={{ flex: 1}}>
     <View style={styles.container}>
       {/* Header with User Info */}
       <HeaderUserInfo />
@@ -271,6 +273,7 @@ const MainScreen: React.FC = () => {
       {/* Footer */}
       <Footer navigation={navigation} />
     </View>
+    </SafeAreaView>
   );
 };
 

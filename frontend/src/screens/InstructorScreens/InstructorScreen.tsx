@@ -1,330 +1,340 @@
 import React, { useEffect, useState } from "react";
-import { View, ScrollView, TextInput, FlatList } from "react-native";
-import { Button, Text } from "react-native-paper";
-import { useNavigation } from "@react-navigation/native";
-import CustomModal from "../../components/Modal";
+import {
+  View,
+  Text,
+  ScrollView,
+  Switch,
+  TouchableOpacity,
+  SafeAreaView,
+} from "react-native";
+import { Button } from "react-native-paper";
 import TimePicker from "../../components/TimePicker";
 import { Swimming } from "../../utils/swimming-enum.utils";
 import { DaysOfWeek } from "../../utils/days-week-enum.utils";
 import { useInstructors } from "../../hooks/instructorHooks/useInstructors";
 import { useInstructorForm } from "../../hooks/instructorHooks/useInstructorForm";
-import Instructor from "../../dto/instructor/instructor.dto";
-import { addItem, removeItem } from "..//../utils/arrayHelpers";
-import { sortDays } from "..//../utils/sortHelpers";
+import { sortDays } from "../../utils/sortHelpers";
 import { isInstructorValid } from "../../utils/validation";
+import StartAndEndTime from "../../dto/instructor/start-and-end-time.dto";
+import { useNavigation } from "@react-navigation/native";
 import styles from "./styles/InstructorScreen.styles";
+import { useAuth } from "../../hooks/authContext";
+import Instructor from "../../dto/instructor/instructor.dto";
+import InstructorService from "../../services/instructor.service";
+import Footer from "../../components/Footer";
+
+// Helper: Format a swimming type string (e.g., "BACK_STROKE" -> "Back stroke")
+const formatSpecialty = (specialty: string): string => {
+  const lower = specialty.toLowerCase().replace(/_/g, " ");
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+};
 
 const InstructorScreen: React.FC = () => {
-  const {
-    instructors,
-    addInstructor,
-    updateInstructor,
-    deleteInstructor,
-    fetchInstructors,
-  } = useInstructors();
+  const { user } = useAuth();
+  const navigation = useNavigation();
+  const { updateInstructor, addInstructor } = useInstructors();
 
+  // Global (saved) instructor data.
+  const [userInstructor, setUserInstructor] = useState<Instructor | null>(null);
+
+  // Global state from useInstructorForm (saved values)
   const {
     name,
     setName,
     specialties,
     setSpecialties,
-    availableSpecialties,
-    setAvailableSpecialties,
     availabilities,
     setAvailabilities,
     availableDays,
     setAvailableDays,
-    selectedDay,
-    setSelectedDay,
-    startTime,
-    setStartTime,
-    endTime,
-    setEndTime,
-    clearForm,
   } = useInstructorForm();
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [selectedInstructor, setSelectedInstructor] = useState<Instructor | null>(null);
-  const navigation = useNavigation();
+  // Temporary state for unsaved changes.
+  const [tempName, setTempName] = useState<string>("");
+  const [tempSpecialties, setTempSpecialties] = useState<Swimming[]>([]);
+  const [tempAvailabilities, setTempAvailabilities] = useState<any[]>(new Array(7).fill(-1));
+  const [tempAvailableDays, setTempAvailableDays] = useState<DaysOfWeek[]>(Object.values(DaysOfWeek));
+  const [tempSelectedDay, setTempSelectedDay] = useState<DaysOfWeek | null>(null);
+  const [tempAvailableSpecialties, setTempAvailableSpecialties] = useState<Swimming[]>([]);
 
+  // Fetch instructor data on mount.
   useEffect(() => {
-    fetchInstructors();
-  }, []);
+    const fetchData = async () => {
+      if (user && user.id) {
+        const instructorData = await InstructorService.getInstructorById(user.id);
+        setUserInstructor(instructorData);
+      }
+    };
+    fetchData();
+  }, [user]);
 
-  const handleAddSpecialty = (specialty: Swimming) => {
-    setSpecialties((prev) => addItem(prev, specialty));
-    setAvailableSpecialties((prev) => removeItem(prev, specialty));
-  };
-
-  const handleRemoveSpecialty = (specialty: Swimming) => {
-    setSpecialties((prev) => prev.filter((s) => s !== specialty));
-    setAvailableSpecialties((prev) => [...prev, specialty]);
-  };
-
-  const handleAddAvailability = () => {
-    if (selectedDay && startTime && endTime) {
-      const dayIndex = Object.values(DaysOfWeek).indexOf(selectedDay);
-      const newAvailability = { startTime, endTime };
-      const updatedAvailabilities = [...availabilities];
-      updatedAvailabilities[dayIndex] = newAvailability;
-      setAvailabilities(updatedAvailabilities);
-      setAvailableDays((prev) => prev.filter((d) => d !== selectedDay));
-      setSelectedDay(null);
-      setStartTime(null);
-      setEndTime(null);
-    }
-  };
-
-  const handleRemoveAvailability = (dayIndex: number) => {
-    const updatedAvailabilities = [...availabilities];
-    updatedAvailabilities[dayIndex] = -1;
-    const removedDay = Object.values(DaysOfWeek)[dayIndex];
-    setAvailabilities(updatedAvailabilities);
-    setAvailableDays((prev) => sortDays([...prev, removedDay]));
-  };
-
-  const checkIfValidInstructor = (): boolean => {
-    const { valid, message } = isInstructorValid(name, specialties, availabilities);
-    if (!valid) {
-      // You could display an alert here if needed.
-      return false;
-    }
-    return true;
-  };
-
-  const handleSaveInstructor = async () => {
-    if (!checkIfValidInstructor()) return;
-    if (selectedInstructor && selectedInstructor.instructorId) {
-      await updateInstructor({
-        id: selectedInstructor.instructorId,
-        data: { name, specialties, availabilities },
+  // When instructor data is fetched, initialize both global and temporary state.
+  useEffect(() => {
+    if (userInstructor) {
+      setName(userInstructor.name);
+      setSpecialties(userInstructor.specialties);
+      setAvailabilities(userInstructor.availabilities);
+      const newAvailableDays = Object.values(DaysOfWeek).filter((day, idx) => {
+        return userInstructor.availabilities[idx] === -1;
       });
-    } else {
-      await addInstructor({ name, specialties, availabilities });
-    }
-    await fetchInstructors();
-    clearForm();
-    setModalVisible(false);
-  };
+      setAvailableDays(newAvailableDays);
 
-  const handleDeleteInstructor = async () => {
-    if (selectedInstructor?.instructorId) {
-      await deleteInstructor({ id: selectedInstructor.instructorId });
-      clearForm();
-      await fetchInstructors();
-      setModalVisible(false);
-    }
-  };
+      // Initialize temporary state with saved values.
+      setTempName(userInstructor.name);
+      setTempSpecialties(userInstructor.specialties);
+      if (userInstructor.availabilities && userInstructor.availabilities.length === 7) {
+        setTempAvailabilities(userInstructor.availabilities);
+      } else {
+        setTempAvailabilities(new Array(7).fill(-1));
+      }
+      setTempAvailableDays(newAvailableDays);
+      setTempSelectedDay(null);
 
-  const renderInstructorCard = ({ item }: { item: Instructor | { id: string; title: string } }) => {
-    if ("id" in item && item.id === "add") {
-      return (
-        <Button
-          mode="contained"
-          style={styles.addCard}
-          onPress={() => {
-            clearForm();
-            setSelectedInstructor(null);
-            setModalVisible(true);
-          }}
-        >
-          {item.title}
-        </Button>
+      // Initialize temporary available swimming types.
+      const allSpecialties = Object.values(Swimming);
+      setTempAvailableSpecialties(
+        allSpecialties.filter((s) => !userInstructor.specialties.includes(s))
       );
     } else {
-      return (
-        <Button
-          mode="contained"
-          style={styles.instructorCard}
-          onPress={() => {
-            setSelectedInstructor(item as Instructor);
-            setModalVisible(true);
-            setName((item as Instructor).name);
-            setSpecialties((item as Instructor).specialties);
-            setAvailabilities((item as Instructor).availabilities);
-            const updatedSpecialties = Object.values(Swimming).filter(
-              (specialty) => !(item as Instructor).specialties.includes(specialty)
-            );
-            setAvailableSpecialties(updatedSpecialties);
-            const updatedDays = Object.values(DaysOfWeek).filter(
-              (_, index) => (item as Instructor).availabilities[index] === -1
-            );
-            setAvailableDays(updatedDays);
-          }}
-        >
-          <Text style={styles.instructorCardText}>{(item as Instructor).name}</Text>
-          <Text style={styles.instructorCardSubText}>
-            Specialties: {(item as Instructor).specialties.join(", ")}
-          </Text>
-        </Button>
-      );
+      // If no instructor data, initialize defaults.
+      setTempAvailabilities(new Array(7).fill(-1));
+      setTempAvailableDays(Object.values(DaysOfWeek));
+    }
+  }, [userInstructor, setName, setSpecialties, setAvailabilities, setAvailableDays]);
+
+  // Recalculate available swimming types whenever tempSpecialties changes.
+  useEffect(() => {
+    const allSpecialties = Object.values(Swimming);
+    setTempAvailableSpecialties(
+      allSpecialties.filter((s) => !tempSpecialties.includes(s))
+    );
+  }, [tempSpecialties]);
+
+  const checkIfValid = (): boolean => {
+    const { valid } = isInstructorValid(tempName, tempSpecialties, tempAvailabilities);
+    return valid;
+  };
+
+  const handleSaveChanges = async () => {
+    if (!checkIfValid()) {
+      console.log("Data invalid. Please check required fields.");
+      return;
+    }
+    try {
+      // Commit temporary changes to global state.
+      setName(tempName);
+      setSpecialties(tempSpecialties);
+      setAvailabilities(tempAvailabilities);
+      setAvailableDays(tempAvailableDays);
+
+      if (userInstructor && userInstructor.instructorId) {
+        await updateInstructor({
+          id: userInstructor.instructorId,
+          data: { specialties: tempSpecialties, availabilities: tempAvailabilities },
+        });
+      } else {
+        await addInstructor({ name: tempName, specialties: tempSpecialties, availabilities: tempAvailabilities });
+      }
+      console.log("Saved instructor data!");
+      setTempSelectedDay(null);
+    } catch (err) {
+      console.error("Error saving data:", err);
     }
   };
 
-  return (
-    <View style={styles.container}>
-      {/* Header with "Profile Settings" */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.backArrow}>←</Text>
-        </TouchableOpacity>
-        <Text style={styles.headerTitle}>Profile Settings</Text>
-        <TouchableOpacity onPress={() => console.log("Profile icon tapped")}>
-          <Text style={styles.profileIcon}>🧑</Text>
-        </TouchableOpacity>
-      </View>
+  const handleCancel = () => {
+    navigation.goBack();
+  };
 
-      {/* Tabs */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "AVAILABILITY" && styles.activeTab]}
-          onPress={() => handleTabSwitch("AVAILABILITY")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "AVAILABILITY" && styles.activeTabText,
-            ]}
-          >
-            Availability
+  // Updated handleToggleDay: Allows multiple days to be active.
+  const handleToggleDay = (day: DaysOfWeek) => {
+    const dayIndex = Object.values(DaysOfWeek).indexOf(day);
+    const currentValue = tempAvailabilities[dayIndex];
+
+    // Simply toggle the day without affecting others.
+    if (currentValue === -1) {
+      // Toggle on: set default time range.
+      const newAvail = [...tempAvailabilities];
+      newAvail[dayIndex] = { startTime: new Date(), endTime: new Date() };
+      setTempAvailabilities(newAvail);
+      setTempAvailableDays((prev) => prev.filter((d) => d !== day));
+      // Set this day as active (for showing time pickers).
+      setTempSelectedDay(day);
+    } else {
+      // Toggle off.
+      const newAvail = [...tempAvailabilities];
+      newAvail[dayIndex] = -1;
+      setTempAvailabilities(newAvail);
+      setTempAvailableDays((prev) => sortDays([...prev, day]));
+      // If this day was active, remove it.
+      if (tempSelectedDay === day) {
+        setTempSelectedDay(null);
+      }
+    }
+  };
+
+  const handleUpdateDayRange = (day: DaysOfWeek, start?: Date, end?: Date) => {
+    const dayIndex = Object.values(DaysOfWeek).indexOf(day);
+    if (tempAvailabilities[dayIndex] === -1) return;
+    const newAvail = [...tempAvailabilities];
+    const currentRange = newAvail[dayIndex] as StartAndEndTime;
+    newAvail[dayIndex] = {
+      startTime: start || currentRange.startTime,
+      endTime: end || currentRange.endTime,
+    };
+    setTempAvailabilities(newAvail);
+  };
+
+  const handleToggleSpecialty = (specialty: Swimming) => {
+    if (tempSpecialties.includes(specialty)) {
+      setTempSpecialties((prev) => prev.filter((s) => s !== specialty));
+    } else {
+      setTempSpecialties((prev) => [...prev, specialty]);
+    }
+  };
+
+  // Compute active days (all days where tempAvailabilities is not -1).
+  const activeDays = Object.values(DaysOfWeek).filter((day, idx) => {
+    return tempAvailabilities[idx] !== -1;
+  });  
+
+  // Render saved availability from global state.
+  const renderSavedAvailability = () => (
+    <View style={styles.savedAvailabilityContainer}>
+      <Text style={styles.sectionTitle}>Saved Availability</Text>
+      {Object.values(DaysOfWeek).map((day, idx) => {
+        const availability = availabilities[idx];
+        if (availability === -1) return null;
+        return (
+          <Text style={styles.savedAvailabilityText} key={day}>
+            {day}: {new Date(availability.startTime).toLocaleTimeString()} -{" "}
+            {new Date(availability.endTime).toLocaleTimeString()}
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === "SWIMMING_TYPES" && styles.activeTab]}
-          onPress={() => handleTabSwitch("SWIMMING_TYPES")}
-        >
-          <Text
-            style={[
-              styles.tabText,
-              activeTab === "SWIMMING_TYPES" && styles.activeTabText,
-            ]}
-          >
-            Swimming Types
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Content */}
-      <ScrollView style={styles.content}>
-        {activeTab === "AVAILABILITY" ? (
-          <>
-            <Text style={styles.sectionTitle}>Set Your Availability</Text>
-            {dayLabels.map(({ label, value }) => {
-              const dayInfo = daySettings[value];
-              return (
-                <View key={value} style={styles.dayRow}>
-                  <View style={styles.dayLabelContainer}>
-                    <Text style={styles.dayLabel}>{label}</Text>
-                    <Switch
-                      value={dayInfo.enabled}
-                      onValueChange={() => handleToggleDay(value)}
-                    />
-                  </View>
-                  {dayInfo.enabled && (
-                    <View style={styles.timePickersContainer}>
-                      <Text style={styles.timePickersLabel}>Available From</Text>
-                      <TimePicker
-                        label="From"
-                        onTimeSelected={(time) =>
-                          handleUpdateDayRange(value, time, undefined)
-                        }
-                      />
-                      <Text style={styles.timePickersLabel}>Available Until</Text>
-                      <TimePicker
-                        label="Until"
-                        onTimeSelected={(time) =>
-                          handleUpdateDayRange(value, undefined, time)
-                        }
-                      />
-                    </View>
-                  )}
-                </View>
-              );
-            })}
-          </>
-        ) : (
-          <>
-            <Text style={styles.sectionTitle}>Select Swimming Types</Text>
-            <View style={styles.specialtiesContainer}>
-              {ALL_SPECIALTIES.map((specialty) => (
-                <TouchableOpacity
-                  key={specialty}
-                  style={[
-                    styles.specialtyChip,
-                    selectedSpecialties.includes(specialty) &&
-                      styles.specialtyChipSelected,
-                  ]}
-                  onPress={() => handleToggleSpecialty(specialty)}
-                >
-                  <Text
-                    style={[
-                      styles.specialtyText,
-                      selectedSpecialties.includes(specialty) &&
-                        styles.specialtyTextSelected,
-                    ]}
-                  >
-                    {specialty}
-                  </Text>
-                  {selectedSpecialties.includes(specialty) && (
-                    <Text style={styles.checkMark}> ✓</Text>
-                  )}
-                </TouchableOpacity>
-              ))}
-            </View>
-          </>
-        )}
-
-        {/* Current Settings */}
-        <Text style={styles.sectionTitle}>Current Settings</Text>
-        <View style={styles.currentSettingsContainer}>
-          {Object.entries(daySettings).map(([dayKey, dayInfo]) => {
-            if (!dayInfo.enabled || !dayInfo.range) return null;
-            return (
-              <Text style={styles.currentSettingsText} key={dayKey}>
-                {dayKey}:
-                {"  "}
-                {new Date(dayInfo.range.startTime).toLocaleTimeString()} -{" "}
-                {new Date(dayInfo.range.endTime).toLocaleTimeString()}
-              </Text>
-            );
-          })}
-          {selectedSpecialties.length > 0 && (
-            <Text style={styles.currentSettingsText}>
-              Selected Types: {selectedSpecialties.join(", ")}
-            </Text>
-          )}
-        </View>
-
-        {/* Save / Cancel Buttons */}
-        <View style={styles.buttonRow}>
-          <Button mode="contained" style={styles.saveButton} onPress={handleSaveChanges}>
-            Save Changes
-          </Button>
-          <Button mode="outlined" style={styles.cancelButton} onPress={handleCancel}>
-            Cancel
-          </Button>
-        </View>
-      </ScrollView>
-
-      {/* Confirmation Modal (example) */}
-      <CustomModal
-        visible={confirmModalVisible}
-        title="Changes Saved"
-        onClose={() => setConfirmModalVisible(false)}
-      >
-        <View style={{ padding: 20 }}>
-          <Text style={{ fontSize: 16, marginBottom: 20 }}>
-            Your availability and swimming types have been updated.
-          </Text>
-          <Button
-            mode="contained"
-            onPress={() => setConfirmModalVisible(false)}
-          >
-            OK
-          </Button>
-        </View>
-      </CustomModal>
+        );
+      })}
     </View>
   );
+
+  return (
+    <SafeAreaView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={styles.headerTitle}>Profile Settings</Text>
+          <TouchableOpacity onPress={() => console.log("Profile icon tapped")}>
+            <Text style={styles.profileIcon}>🧑</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }}>
+          {/* Current Settings (Global Data) */}
+          <Text style={styles.sectionTitle}>Current Settings</Text>
+          {userInstructor ? (
+            <View style={styles.currentSettingsContainer}>
+              <Text style={styles.currentSettingsText}>
+                Name: {userInstructor.name}
+              </Text>
+              {userInstructor.availabilities.map((availability, idx) => {
+                if (availability === -1) return null;
+                const day = Object.values(DaysOfWeek)[idx];
+                return (
+                  <Text style={styles.currentSettingsText} key={day}>
+                    {day}: {new Date(availability.startTime).toLocaleTimeString()} -{" "}
+                    {new Date(availability.endTime).toLocaleTimeString()}
+                  </Text>
+                );
+              })}
+              {userInstructor.specialties.length > 0 && (
+                <Text style={styles.currentSettingsText}>
+                  Specialties:{" "}
+                  {userInstructor.specialties.map(formatSpecialty).join(", ")}
+                </Text>
+              )}
+            </View>
+          ) : (
+            <Text style={styles.currentSettingsText}>Loading current settings...</Text>
+          )}
+
+          {/* Availability Section (Temporary State) */}
+          <Text style={styles.sectionTitle}>Set Your Availability</Text>
+          <View style={styles.daysGrid}>
+            {availableDays.map((day) => (
+              <View key={day} style={styles.dayBox}>
+                <Text style={styles.dayLabel}>{formatSpecialty(day)}</Text>
+                <Switch
+                  value={
+                    tempAvailabilities[Object.values(DaysOfWeek).indexOf(day)] !== -1
+                  }
+                  onValueChange={() => handleToggleDay(day)}
+                />
+              </View>
+            ))}
+          </View>
+
+          {/* For each active day, render its time picker section */}
+          {activeDays.map((day) => (
+            <View key={day} style={styles.timePickerSection}>
+              <Text style={styles.sectionTitle}>Set Time for {day}</Text>
+              <Text style={styles.timePickersLabel}>Available From</Text>
+              <TimePicker
+                label="From"
+                onTimeSelected={(time) =>
+                  handleUpdateDayRange(day, time, undefined)
+                }
+              />
+              <Text style={styles.timePickersLabel}>Available Until</Text>
+              <TimePicker
+                label="Until"
+                onTimeSelected={(time) =>
+                  handleUpdateDayRange(day, undefined, time)
+                }
+              />
+            </View>
+          ))}
+
+          {/* Swimming Types Section (Temporary State) */}
+          <Text style={styles.sectionTitle}>Select Swimming Types</Text>
+          <View style={styles.swimWrap}>
+            {tempAvailableSpecialties.map((specialty) => (
+              <TouchableOpacity
+                key={specialty}
+                style={styles.swimChip}
+                onPress={() => handleToggleSpecialty(specialty)}
+              >
+                <Text style={styles.swimChipText}>{formatSpecialty(specialty)}</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+          <Text style={styles.sectionTitle}>Chosen Swimming Types</Text>
+          <View style={styles.swimColumn}>
+            {tempSpecialties.map((specialty) => (
+              <TouchableOpacity
+                key={specialty}
+                style={styles.swimRowItem}
+                onPress={() => handleToggleSpecialty(specialty)}
+              >
+                <Text style={styles.swimRowItemText}>{formatSpecialty(specialty)}</Text>
+                <Text style={styles.swimRowItemIcon}>✓</Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+
+          {/* Save / Cancel Buttons */}
+          <View style={styles.buttonRow}>
+            <Button mode="contained" style={styles.saveButton} onPress={handleSaveChanges}>
+              Save
+            </Button>
+            <Button mode="outlined" style={styles.cancelButton} onPress={handleCancel}>
+              Cancel
+            </Button>
+          </View>
+        </ScrollView>
+
+        {/* Footer */}
+        <Footer navigation={navigation} />
+      </View>
+    </SafeAreaView>
+  );
 };
+
 export default InstructorScreen;

@@ -8,7 +8,7 @@ import {
   SafeAreaView,
 } from "react-native";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
-import { Button } from "react-native-paper";
+import { Button, RadioButton } from "react-native-paper";
 import LessonService from "../../services/lesson.service";
 import Lesson from "../../dto/lesson/lesson.dto";
 import CustomModal from "../../components/Modal";
@@ -24,6 +24,12 @@ import Instructor from "../../dto/instructor/instructor.dto";
 import InstructorService from "../../services/instructor.service";
 
 type LessonTab = "MY" | "COMPLETED";
+
+// Helper: Format a swimming type string (unused in this example but kept for reference)
+const formatSpecialty = (specialty: string): string => {
+  const lower = specialty.toLowerCase().replace(/_/g, " ");
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+};
 
 const MainScreen: React.FC = () => {
   const { user } = useAuth();
@@ -41,6 +47,7 @@ const MainScreen: React.FC = () => {
 
   // Fields for lesson creation/editing
   const [lessonTitle, setLessonTitle] = useState("");
+  const [lessonType, setLessonType] = useState<LessonType | null>(null);
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null);
   const [lessonEndTime, setLessonEndTime] = useState<Date | null>(null);
 
@@ -243,13 +250,19 @@ const MainScreen: React.FC = () => {
         onClose={() => setModalVisible(false)}
       >
         <View style={styles.modalContent}>
-          <TextInput
-            style={styles.modalInput}
-            placeholder="Lesson Type (e.g., PRIVATE)"
-            placeholderTextColor="#777"
-            value={lessonTitle}
-            onChangeText={setLessonTitle}
-          />
+          <Text style={styles.modalLabel}>Select Lesson Type:</Text>
+          <RadioButton.Group
+              onValueChange={(value) => setLessonType(value as LessonType)}
+              value={lessonType || "undefined"}
+            >
+              {Object.values(LessonType).map((type) => (
+                <View key={type} style={styles.option}>
+                  <RadioButton value={type} />
+                  <Text>{formatSpecialty(type.toString())}</Text>
+                </View>
+              ))}
+            </RadioButton.Group>
+          
           <Text style={styles.modalLabel}>Select Start Time</Text>
           <TimePicker
             label="Start Time"

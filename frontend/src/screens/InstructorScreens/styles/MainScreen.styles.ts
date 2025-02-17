@@ -94,4 +94,9 @@ export default StyleSheet.create({
   saveButton: {
     marginTop: 10,
   },
+  option: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 5,
+  },
 });

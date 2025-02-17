@@ -1,36 +1,61 @@
 import React from 'react';
-import { View, StyleSheet } from 'react-native';
-import Button from "./Button"
-
-type FooterType = "Student" | "Instructor"
+import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text } from 'react-native';
 
 interface FooterProps {
   navigation: any;
-  type: FooterType
 }
 
-const Footer: React.FC<FooterProps> = ({ navigation, type }) => {
+const Footer: React.FC<FooterProps> = ({ navigation }) => {
   return (
-    <View style={styles.footer}>
-      <Button title="Home" onPress={() => navigation.navigate(`${type}HomeScreen`)} />
-      <Button title="Lessons" onPress={() => navigation.navigate(`${type}LessonScreen`)} />
-      <Button title="Settings" onPress={() => navigation.navigate(`${type}SettingsScreen`)} />
-    </View>
+    <SafeAreaView style={styles.footerContainer}>
+      <View style={styles.footer}>
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => navigation.navigate("MainScreen")}
+        >
+          <Text style={styles.footerButtonText}>Home</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => navigation.navigate("CalendarScreen")}
+        >
+          <Text style={styles.footerButtonText}>Calendar</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => navigation.navigate("InstructorScreen")}
+        >
+          <Text style={styles.footerButtonText}>Settings</Text>
+        </TouchableOpacity>
+      </View>
+    </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    padding: 10,
-    backgroundColor: '#f8f8f8',
+  footerContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    backgroundColor: '#f8f8f8',
     borderTopWidth: 1,
     borderTopColor: '#ddd',
+  },
+  footer: {
+    flexDirection: 'row',
+    height: 60,
+  },
+  footerButton: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    // No borderRadius for pointy corners
+    backgroundColor: '#f8f8f8',
+  },
+  footerButtonText: {
+    fontSize: 16,
+    color: '#333',
   },
 });
 

@@ -12,22 +12,27 @@ import LessonService from "../../services/lesson.service";
 import Lesson from "../../dto/lesson/lesson.dto";
 import CustomModal from "../../components/Modal";
 import CustomCard from "../../components/Card";
-import { useAuth } from "../../hooks/authContext";
-import styles from "./styles/MainScreen.styles"
-import StartAndEndTime from "../../dto/instructor/start-and-end-time.dto";
 import TimePicker from "../../components/TimePicker";
 import NewLesson from "../../dto/lesson/new-lesson.dto";
 import { LessonType } from "../../utils/lesson-enum.utils";
+import StartAndEndTime from "../../dto/instructor/start-and-end-time.dto";
+import { useAuth } from "../../hooks/authContext";
+import Footer from "../../components/Footer";
+import styles from "./styles/MainScreen.styles";
+import Instructor from "../../dto/instructor/instructor.dto";
+import InstructorService from "../../services/instructor.service";
+
+type LessonTab = "MY" | "COMPLETED";
 
 const MainScreen: React.FC = () => {
   const { user } = useAuth();
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
-  // Lessons list
+  // Lessons list states
   const [allLessons, setAllLessons] = useState<Lesson[]>([]);
   const [filteredLessons, setFilteredLessons] = useState<Lesson[]>([]);
-  const [searchText, setSearchText] = useState("");
+  const [activeTab, setActiveTab] = useState<LessonTab>("MY");
 
   // Modal state for create/edit lesson
   const [modalVisible, setModalVisible] = useState(false);
@@ -38,22 +43,23 @@ const MainScreen: React.FC = () => {
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null);
   const [lessonEndTime, setLessonEndTime] = useState<Date | null>(null);
 
-  useEffect(() => {
-    if (user && isFocused) {
-      fetchLessons();
-    }
-  }, [user, isFocused]);
+  const [userInstructor, setUserInstructor] = useState<Instructor | null>(null);
 
   useEffect(() => {
-    if (!searchText.trim()) {
-      setFilteredLessons(allLessons);
-    } else {
-      const filtered = allLessons.filter((lesson) =>
-        lesson.typeLesson.toLowerCase().includes(searchText.toLowerCase())
-      );
-      setFilteredLessons(filtered);
-    }
-  }, [searchText, allLessons]);
+    const fetchData = async () => {
+      if (user && user.id && isFocused) {
+        await fetchLessons();
+        const instructorData = await InstructorService.getInstructorById(user.id);
+        setUserInstructor(instructorData);
+      }
+    };
+  
+    fetchData();
+  }, [user, isFocused]);  
+
+  useEffect(() => {
+    filterLessons();
+  }, [allLessons, activeTab]);
 
   const fetchLessons = async () => {
     try {
@@ -62,7 +68,7 @@ const MainScreen: React.FC = () => {
       const end = new Date();
       end.setDate(end.getDate() + 30);
       const lessons = await LessonService.getLessonsWithinRange(start, end);
-      // Only show lessons created by this instructor
+      // Only show lessons created by the logged-in instructor
       const myLessons = lessons.filter(
         (lesson) => lesson.instructorId === user?.id
       );
@@ -72,6 +78,21 @@ const MainScreen: React.FC = () => {
     }
   };
 
+  // Filtering lessons based on active tab:
+  const filterLessons = () => {
+    const now = new Date();
+    const filtered = allLessons.filter((lesson) => {
+      if (activeTab === "MY") {
+        return new Date(lesson.startAndEndTime.startTime) > now;
+      } else {
+        return new Date(lesson.startAndEndTime.startTime) < now;
+      }
+    });
+    setFilteredLessons(filtered);
+  };
+  
+
+  // Open modal for creating a new lesson
   const openCreateModal = () => {
     setSelectedLesson(null);
     setLessonTitle("");
@@ -80,6 +101,7 @@ const MainScreen: React.FC = () => {
     setModalVisible(true);
   };
 
+  // Open modal for editing an existing lesson
   const openEditModal = (lesson: Lesson) => {
     setSelectedLesson(lesson);
     setLessonTitle(lesson.typeLesson);
@@ -91,12 +113,12 @@ const MainScreen: React.FC = () => {
   };
 
   const handleSaveLesson = async () => {
+    if (!lessonTitle || !lessonStartTime || !lessonEndTime) {
+      console.log("Please fill all fields");
+      return;
+    }
+
     try {
-      if (!lessonTitle || !lessonStartTime || !lessonEndTime) {
-        console.log("Please fill all fields");
-        return;
-      }
-      
       if (selectedLesson) {
         await LessonService.updateLesson(selectedLesson.lessonId || "", {
           ...selectedLesson,
@@ -104,12 +126,11 @@ const MainScreen: React.FC = () => {
           startAndEndTime: new StartAndEndTime(lessonStartTime, lessonEndTime),
         });
       } else {
-        // Create a new lesson
         const day = lessonStartTime.getDay();
         const newLesson = new NewLesson(
           LessonType.PRIVATE,
           user?.id || "undefined",
-          [], 
+          [],
           new StartAndEndTime(lessonStartTime, lessonEndTime),
           []
         );
@@ -122,7 +143,6 @@ const MainScreen: React.FC = () => {
     }
   };
 
-  // Render a lesson card
   const renderLesson = ({ item }: { item: Lesson }) => {
     const status = item.students.length > 0 ? "Active" : "Completed";
     return (
@@ -137,25 +157,59 @@ const MainScreen: React.FC = () => {
     );
   };
 
+  // Header component showing user info
+  const HeaderUserInfo = () => (
+    <View style={styles.headerUserInfo}>
+      <Text style={styles.userName}>{user?.name || "undefined"} - {user?.phone || "undefined"}</Text>
+      <Text style={styles.userDetails}>
+        {`Swimming: ${userInstructor?.specialties || "undefined"}\n`}
+        {`Availability: ${userInstructor?.availabilities || "undefined"}`}
+      </Text>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Lessons</Text>
-        <TouchableOpacity onPress={fetchLessons}>
-          <Text style={styles.refreshIcon}>⟳</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Header with User Info */}
+      <HeaderUserInfo />
 
-      {/* Search Bar */}
-      <View style={styles.searchContainer}>
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search lessons..."
-          placeholderTextColor="#999"
-          value={searchText}
-          onChangeText={setSearchText}
-        />
+      {/* Purple UI Line */}
+      <View style={styles.purpleLine} />
+
+      {/* Toggle Buttons for Lesson Filtering */}
+      <View style={styles.toggleContainer}>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            activeTab === "MY" && styles.activeToggleButton,
+          ]}
+          onPress={() => setActiveTab("MY")}
+        >
+          <Text
+            style={[
+              styles.toggleButtonText,
+              activeTab === "MY" && styles.activeToggleButtonText,
+            ]}
+          >
+            My Lessons
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.toggleButton,
+            activeTab === "COMPLETED" && styles.activeToggleButton,
+          ]}
+          onPress={() => setActiveTab("COMPLETED")}
+        >
+          <Text
+            style={[
+              styles.toggleButtonText,
+              activeTab === "COMPLETED" && styles.activeToggleButtonText,
+            ]}
+          >
+            Completed Lessons
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Lesson List */}
@@ -171,7 +225,11 @@ const MainScreen: React.FC = () => {
 
       {/* Create Lesson Button */}
       <View style={styles.createButtonContainer}>
-        <Button mode="contained" style={styles.createButton} onPress={openCreateModal}>
+        <Button
+          mode="contained"
+          style={styles.createButton}
+          onPress={openCreateModal}
+        >
           Create New Lesson
         </Button>
       </View>
@@ -200,11 +258,18 @@ const MainScreen: React.FC = () => {
             label="End Time"
             onTimeSelected={(time) => setLessonEndTime(time)}
           />
-          <Button mode="contained" onPress={handleSaveLesson} style={styles.saveButton}>
+          <Button
+            mode="contained"
+            onPress={handleSaveLesson}
+            style={styles.saveButton}
+          >
             Save Lesson
           </Button>
         </View>
+
       </CustomModal>
+      {/* Footer */}
+      <Footer navigation={navigation} />
     </View>
   );
 };

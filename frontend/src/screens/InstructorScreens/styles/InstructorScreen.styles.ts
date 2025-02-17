@@ -6,152 +6,142 @@ const { width, height } = Dimensions.get("window");
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.white,
-    padding: 20,
+    backgroundColor: "#fff",
   },
+  // Header
   header: {
+    flexDirection: "row",
     alignItems: "center",
-    marginBottom: 20,
+    justifyContent: "space-between",
+    paddingTop: 50,
+    paddingHorizontal: 20,
     paddingBottom: 10,
-    borderBottomWidth: 2,
-    borderBottomColor: Colors.lightGray,
+  },
+  backArrow: {
+    fontSize: 20,
+    color: "#333",
   },
   headerTitle: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: Colors.primary,
-    fontFamily: Fonts.bold, // Custom font for better appearance
-  },
-  content: {
-    flex: 1,
-    marginBottom: 20,
-  },
-  listContainer: {
-    alignItems: "center",
-    paddingBottom: 20,
-  },
-  addCard: {
-    backgroundColor: Colors.secondary,
-    borderRadius: 10,
-    width: "90%",
-    marginVertical: 10,
-    padding: 15,
-    elevation: 5,
-  },
-  instructorCard: {
-    backgroundColor: Colors.white,
-    borderRadius: 10,
-    width: "45%", // Responsive width
-    margin: 10,
-    padding: 15,
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.2,
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-  },
-  instructorCardText: {
     fontSize: 18,
     fontWeight: "bold",
-    marginBottom: 5,
-    color: Colors.primary,
+    color: "#333",
   },
-  instructorCardSubText: {
-    fontSize: 14,
-    color: Colors.gray,
+  profileIcon: {
+    fontSize: 20,
+    color: "#333",
   },
-  modalContent: {
-    maxHeight: "80%", // Limit modal height
-    padding: 20,
-    backgroundColor: Colors.white,
-    borderRadius: 10,
-    elevation: 5,
+  // Tabs
+  tabContainer: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    borderBottomColor: "#eee",
+    marginHorizontal: 20,
   },
-  input: {
-    height: 40,
-    borderColor: Colors.lightGray,
-    borderWidth: 1,
-    borderRadius: 5,
-    marginBottom: 20,
-    paddingHorizontal: 10,
+  tab: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: "center",
+  },
+  activeTab: {
+    borderBottomWidth: 2,
+    borderBottomColor: "#6C63FF", // Purple accent
+  },
+  tabText: {
     fontSize: 16,
+    color: "#999",
+  },
+  activeTabText: {
+    color: "#6C63FF",
+    fontWeight: "600",
+  },
+  // Content
+  content: {
+    paddingHorizontal: 20,
   },
   sectionTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    marginBottom: 10,
-    color: Colors.primary,
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    marginVertical: 10,
   },
+  // Availability
+  dayRow: {
+    marginVertical: 8,
+  },
+  dayLabelContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 5,
+  },
+  dayLabel: {
+    fontSize: 14,
+    color: "#333",
+  },
+  timePickersContainer: {
+    marginLeft: 10,
+    marginVertical: 5,
+  },
+  timePickersLabel: {
+    fontSize: 14,
+    marginTop: 5,
+    marginBottom: 5,
+    color: "#666",
+  },
+  // Swimming Types
   specialtiesContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    marginBottom: 20,
+    marginBottom: 10,
   },
-  chip: {
-    backgroundColor: Colors.lightGreen,
+  specialtyChip: {
+    backgroundColor: "#eee",
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 20,
     margin: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-  },
-  chipSelected: {
-    backgroundColor: Colors.darkGreen,
-    borderRadius: 20,
-    margin: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-  },
-  chipRemove: {
-    fontWeight: "bold",
-    color: Colors.white,
-  },
-  daysContainer: {
     flexDirection: "row",
-    flexWrap: "wrap",
+    alignItems: "center",
+  },
+  specialtyChipSelected: {
+    backgroundColor: "#6C63FF",
+  },
+  specialtyText: {
+    fontSize: 14,
+    color: "#333",
+  },
+  specialtyTextSelected: {
+    color: "#fff",
+  },
+  checkMark: {
+    color: "#fff",
+    marginLeft: 5,
+    fontSize: 14,
+  },
+  // Current Settings
+  currentSettingsContainer: {
+    backgroundColor: "#f9f9f9",
+    padding: 10,
+    borderRadius: 8,
     marginBottom: 20,
   },
-  dayChip: {
-    backgroundColor: Colors.blue,
-    borderRadius: 20,
-    margin: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
+  currentSettingsText: {
+    fontSize: 14,
+    color: "#333",
+    marginVertical: 2,
   },
-  availabilityButton: {
-    backgroundColor: Colors.primary,
-    borderRadius: 5,
-    marginVertical: 15,
-    paddingVertical: 10,
-  },
-  availabilityChip: {
-    backgroundColor: Colors.lightGray,
-    borderRadius: 20,
-    marginVertical: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 15,
-  },
-  availabilityText: {
-    fontSize: 16,
-    color: Colors.black,
+  // Buttons
+  buttonRow: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginBottom: 40,
   },
   saveButton: {
-    backgroundColor: Colors.green,
-    borderRadius: 5,
-    marginVertical: 10,
-    paddingVertical: 10,
+    backgroundColor: "#6C63FF",
+    width: "40%",
   },
-  deleteButton: {
-    backgroundColor: Colors.red,
-    borderRadius: 5,
-    marginVertical: 10,
-    paddingVertical: 10,
-  },
-  backButton: {
-    marginTop: 20,
-    borderColor: Colors.primary,
-    borderWidth: 1,
-    borderRadius: 5,
+  cancelButton: {
+    width: "40%",
+    borderColor: "#6C63FF",
   },
 });

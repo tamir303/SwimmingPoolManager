@@ -10,7 +10,6 @@ type roleType = "instructor" | "student"
 
 const RegisterLoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const { login, register } = useAuth();
-    const [modalVisible, setModalVisible] = useState(true);
     const [status, setStatus] = useState<statusType>("Register");
     const [role, setRole] = useState<roleType>("student");
     const [name, setName] = useState<string>("");

@@ -1,6 +1,4 @@
-import { StyleSheet, Dimensions } from "react-native";
-
-const { width, height } = Dimensions.get("window");
+import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
   container: {
@@ -8,39 +6,47 @@ export default StyleSheet.create({
     backgroundColor: "#F8F9FA",
     paddingHorizontal: 20,
     paddingTop: 40,
+    paddingBottom: 60,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  headerUserInfo: {
     marginBottom: 10,
   },
-  headerTitle: {
-    fontSize: 28,
+  userName: {
+    fontSize: 24,
     fontWeight: "bold",
     color: "#333",
   },
-  refreshIcon: {
-    fontSize: 24,
-    color: "#4C63D2",
+  userDetails: {
+    fontSize: 16,
+    color: "#666",
   },
   purpleLine: {
     height: 2,
-    backgroundColor: "#6C63FF", // Purple color matching Register/Login style
-    marginBottom: 20,
+    backgroundColor: "#6C63FF",
+    marginVertical: 10,
     borderRadius: 1,
   },
-  searchContainer: {
-    marginBottom: 20,
+  toggleContainer: {
+    flexDirection: "row",
+    justifyContent: "space-around",
+    marginVertical: 10,
   },
-  searchInput: {
-    height: 40,
-    borderColor: "#DDD",
-    borderWidth: 1,
-    borderRadius: 8,
-    paddingHorizontal: 10,
+  toggleButton: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    backgroundColor: "#DDD",
+    borderRadius: 25,
+  },
+  activeToggleButton: {
+    backgroundColor: "#4C63D2",
+  },
+  toggleButtonText: {
+    fontSize: 16,
     color: "#333",
-    backgroundColor: "#FFF",
+  },
+  activeToggleButtonText: {
+    color: "#FFF",
+    fontWeight: "bold",
   },
   listContainer: {
     paddingBottom: 20,

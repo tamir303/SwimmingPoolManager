@@ -162,146 +162,169 @@ const InstructorScreen: React.FC = () => {
   };
 
   return (
-    <View
-      style={styles.container}
-    >
+    <View style={styles.container}>
+      {/* Header with "Profile Settings" */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>FUTURISTIC INSTRUCTORS</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()}>
+          <Text style={styles.backArrow}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile Settings</Text>
+        <TouchableOpacity onPress={() => console.log("Profile icon tapped")}>
+          <Text style={styles.profileIcon}>🧑</Text>
+        </TouchableOpacity>
       </View>
-      <View style={styles.content}>
-        <FlatList
-          data={[{ id: "add", title: "+ Add Instructor" }, ...instructors]}
-          keyExtractor={(item) => ("id" in item ? item.id.toString() : "add")}
-          numColumns={2}
-          renderItem={renderInstructorCard}
-          contentContainerStyle={styles.listContainer}
-        />
-      </View>
-      <CustomModal
-        visible={modalVisible}
-        title={selectedInstructor ? "Edit Instructor" : "Add Instructor"}
-        onClose={() => {
-          clearForm();
-          setModalVisible(false);
-        }}
-      >
-        <ScrollView style={styles.modalContent}>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            placeholder="Enter Instructor Name"
-            placeholderTextColor="#aaa"
-            style={styles.input}
-          />
-          <Text style={styles.sectionTitle}>Specialties</Text>
-          <View style={styles.specialtiesContainer}>
-            {availableSpecialties.map((specialty) => (
-              <Button
-                key={specialty}
-                onPress={() => handleAddSpecialty(specialty)}
-                style={styles.chip}
-                mode="contained"
-              >
-                {specialty}
-              </Button>
-            ))}
-          </View>
-          <View style={styles.specialtiesContainer}>
-            {specialties.map((specialty) => (
-              <Button
-                key={specialty}
-                onPress={() => handleRemoveSpecialty(specialty)}
-                style={styles.chipSelected}
-                mode="contained"
-              >
-                {specialty} <Text style={styles.chipRemove}>×</Text>
-              </Button>
-            ))}
-          </View>
-          <Text style={styles.sectionTitle}>Availability</Text>
-          <View style={styles.daysContainer}>
-            {availableDays.map((day) => (
-              <Button
-                key={day}
-                onPress={() => {
-                  let updatedDays = [...availableDays];
-                  if (selectedDay) {
-                    updatedDays = [...updatedDays, selectedDay].sort(
-                      (a, b) =>
-                        Object.values(DaysOfWeek).indexOf(a) -
-                        Object.values(DaysOfWeek).indexOf(b)
-                    );
-                  }
-                  updatedDays = updatedDays.filter((d) => d !== day);
-                  setAvailableDays(updatedDays);
-                  setSelectedDay(day);
-                }}
-                style={styles.dayChip}
-                mode="contained"
-              >
-                {day}
-              </Button>
-            ))}
-          </View>
-          {selectedDay && (
-            <>
-              <TimePicker label="Select Start Time" onTimeSelected={setStartTime} />
-              <TimePicker label="Select End Time" onTimeSelected={setEndTime} />
-              <Button
-                onPress={handleAddAvailability}
-                style={styles.availabilityButton}
-                mode="contained"
-                disabled={!startTime || !endTime}
-              >
-                Add Availability
-              </Button>
-            </>
-          )}
-          {availabilities.map(
-            (availability, index) =>
-              availability !== -1 && (
-                <Button
-                  key={index}
-                  onPress={() => handleRemoveAvailability(index)}
-                  style={styles.availabilityChip}
-                  mode="contained"
-                >
-                  <Text style={styles.availabilityText}>
-                    {Object.values(DaysOfWeek)[index]}{" "}
-                    {new Date(availability.startTime).toLocaleTimeString()} -{" "}
-                    {new Date(availability.endTime).toLocaleTimeString()}{" "}
-                    <Text style={styles.chipRemove}>×</Text>
-                  </Text>
-                </Button>
-              )
-          )}
-          <Button
-            onPress={handleSaveInstructor}
-            style={styles.saveButton}
-            mode="contained"
+
+      {/* Tabs */}
+      <View style={styles.tabContainer}>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "AVAILABILITY" && styles.activeTab]}
+          onPress={() => handleTabSwitch("AVAILABILITY")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "AVAILABILITY" && styles.activeTabText,
+            ]}
           >
-            {selectedInstructor ? "Update Instructor" : "Add Instructor"}
-          </Button>
-          {selectedInstructor && (
-            <Button
-              onPress={handleDeleteInstructor}
-              style={styles.deleteButton}
-              mode="contained"
-            >
-              Delete Instructor
-            </Button>
+            Availability
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === "SWIMMING_TYPES" && styles.activeTab]}
+          onPress={() => handleTabSwitch("SWIMMING_TYPES")}
+        >
+          <Text
+            style={[
+              styles.tabText,
+              activeTab === "SWIMMING_TYPES" && styles.activeTabText,
+            ]}
+          >
+            Swimming Types
+          </Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* Content */}
+      <ScrollView style={styles.content}>
+        {activeTab === "AVAILABILITY" ? (
+          <>
+            <Text style={styles.sectionTitle}>Set Your Availability</Text>
+            {dayLabels.map(({ label, value }) => {
+              const dayInfo = daySettings[value];
+              return (
+                <View key={value} style={styles.dayRow}>
+                  <View style={styles.dayLabelContainer}>
+                    <Text style={styles.dayLabel}>{label}</Text>
+                    <Switch
+                      value={dayInfo.enabled}
+                      onValueChange={() => handleToggleDay(value)}
+                    />
+                  </View>
+                  {dayInfo.enabled && (
+                    <View style={styles.timePickersContainer}>
+                      <Text style={styles.timePickersLabel}>Available From</Text>
+                      <TimePicker
+                        label="From"
+                        onTimeSelected={(time) =>
+                          handleUpdateDayRange(value, time, undefined)
+                        }
+                      />
+                      <Text style={styles.timePickersLabel}>Available Until</Text>
+                      <TimePicker
+                        label="Until"
+                        onTimeSelected={(time) =>
+                          handleUpdateDayRange(value, undefined, time)
+                        }
+                      />
+                    </View>
+                  )}
+                </View>
+              );
+            })}
+          </>
+        ) : (
+          <>
+            <Text style={styles.sectionTitle}>Select Swimming Types</Text>
+            <View style={styles.specialtiesContainer}>
+              {ALL_SPECIALTIES.map((specialty) => (
+                <TouchableOpacity
+                  key={specialty}
+                  style={[
+                    styles.specialtyChip,
+                    selectedSpecialties.includes(specialty) &&
+                      styles.specialtyChipSelected,
+                  ]}
+                  onPress={() => handleToggleSpecialty(specialty)}
+                >
+                  <Text
+                    style={[
+                      styles.specialtyText,
+                      selectedSpecialties.includes(specialty) &&
+                        styles.specialtyTextSelected,
+                    ]}
+                  >
+                    {specialty}
+                  </Text>
+                  {selectedSpecialties.includes(specialty) && (
+                    <Text style={styles.checkMark}> ✓</Text>
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          </>
+        )}
+
+        {/* Current Settings */}
+        <Text style={styles.sectionTitle}>Current Settings</Text>
+        <View style={styles.currentSettingsContainer}>
+          {Object.entries(daySettings).map(([dayKey, dayInfo]) => {
+            if (!dayInfo.enabled || !dayInfo.range) return null;
+            return (
+              <Text style={styles.currentSettingsText} key={dayKey}>
+                {dayKey}:
+                {"  "}
+                {new Date(dayInfo.range.startTime).toLocaleTimeString()} -{" "}
+                {new Date(dayInfo.range.endTime).toLocaleTimeString()}
+              </Text>
+            );
+          })}
+          {selectedSpecialties.length > 0 && (
+            <Text style={styles.currentSettingsText}>
+              Selected Types: {selectedSpecialties.join(", ")}
+            </Text>
           )}
-        </ScrollView>
-      </CustomModal>
-      <Button
-        onPress={() => navigation.goBack()}
-        mode="outlined"
-        style={styles.backButton}
+        </View>
+
+        {/* Save / Cancel Buttons */}
+        <View style={styles.buttonRow}>
+          <Button mode="contained" style={styles.saveButton} onPress={handleSaveChanges}>
+            Save Changes
+          </Button>
+          <Button mode="outlined" style={styles.cancelButton} onPress={handleCancel}>
+            Cancel
+          </Button>
+        </View>
+      </ScrollView>
+
+      {/* Confirmation Modal (example) */}
+      <CustomModal
+        visible={confirmModalVisible}
+        title="Changes Saved"
+        onClose={() => setConfirmModalVisible(false)}
       >
-        Back to Main
-      </Button>
+        <View style={{ padding: 20 }}>
+          <Text style={{ fontSize: 16, marginBottom: 20 }}>
+            Your availability and swimming types have been updated.
+          </Text>
+          <Button
+            mode="contained"
+            onPress={() => setConfirmModalVisible(false)}
+          >
+            OK
+          </Button>
+        </View>
+      </CustomModal>
     </View>
   );
 };
-
 export default InstructorScreen;

@@ -29,7 +29,7 @@ const getEnvVariables = () => {
   } else if (env === "prod") {
     backendPort = parseInt(EXPO_BCAKEND_SERVER_PROD_PORT || "6000", 10); // Default to 6000 if EXPO_BCAKEND_SERVER_PROD_PORT is not defined
   } else {
-    // Testing the application, using the services in dev mode, port will remain 0
+    backendPort = parseInt(EXPO_BCAKEND_SERVER_DEV_PORT || "6001", 10);
   }
   const backendServerURL = `http://${EXPO_BCAKEND_SERVER_IP}:${backendPort}`;
 

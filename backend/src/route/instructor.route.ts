@@ -116,6 +116,14 @@ instructorRouter.post(
   }
 );
 
+instructorRouter.post(
+  "/login",
+  deserializeAvailabilities,
+  async (req: Request, res: Response) => {
+    instructorController.loginInstructor(req, res);
+  }
+);
+
 /**
  * @swagger
  * /instructor:
@@ -231,7 +239,7 @@ instructorRouter.get("/availability", async (req: Request, res: Response) => {
  *               $ref: '#/components/schemas/Instructor'
  */
 instructorRouter.get(
-  "/single/:instructorId",
+  "/single/:id",
   async (req: Request, res: Response) => {
     instructorController.getInstructorById(req, res);
   }
@@ -261,7 +269,7 @@ instructorRouter.get(
  *         description: Instructor updated successfully
  */
 instructorRouter.put(
-  "/:instructorId",
+  "/:id",
   deserializeAvailabilities,
   async (req: Request, res: Response) => {
     instructorController.updateInstructor(req, res);

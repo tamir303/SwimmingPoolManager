@@ -6,12 +6,12 @@ import { useAuth } from "../hooks/authContext";
 import styles from "./RegisterLoginScreen.styles"
 
 type statusType = "Register" | "Login"
-type roleType = "instructor" | "student"
+type roleType = "Instructor" | "Student"
 
 const RegisterLoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
     const { login, register } = useAuth();
-    const [status, setStatus] = useState<statusType>("Register");
-    const [role, setRole] = useState<roleType>("student");
+    const [status, setStatus] = useState<statusType>("Login");
+    const [role, setRole] = useState<roleType>("Instructor");
     const [name, setName] = useState<string>("");
     const [phone, setPhone] = useState<string>("");
     const [password, setPassword] = useState<string>("");
@@ -25,26 +25,26 @@ const RegisterLoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         <>
           <View style={styles.roleContainer}>
             <TouchableOpacity 
-                style={[styles.roleButton, role === "student" && styles.activeRoleButton]} 
-                onPress={() => setRole("student")}
+                style={[styles.roleButton, role === "Student" && styles.activeRoleButton]} 
+                onPress={() => setRole("Student")}
             >
                 <Text style={styles.roleText}>Student</Text>
             </TouchableOpacity>
             <TouchableOpacity 
-                style={[styles.roleButton, role === "instructor" && styles.activeRoleButton]} 
-                onPress={() => setRole("instructor")}
+                style={[styles.roleButton, role === "Instructor" && styles.activeRoleButton]} 
+                onPress={() => setRole("Instructor")}
             >
                 <Text style={styles.roleText}>Instructor</Text>
             </TouchableOpacity>
           </View>
-          <InputField placeholder="Enter your phone number" icon="📞" onChange={setPhone} />
-          <InputField placeholder="Enter your full name" icon="👤"  onChange={setName}/>
-          <InputField placeholder="Create a password" icon="🔒" onChange={setPassword}/>
+          <InputField placeholder="Phone number" icon="📞" onChange={setPhone} />
+          <InputField placeholder="Full name" icon="👤"  onChange={setName}/>
+          <InputField placeholder="Password" icon="🔒" onChange={setPassword}/>
         </>
       ) : (
         <>
-          <InputField placeholder="Enter your phone number" icon="📞" onChange={setPhone}/>
-          <InputField placeholder="Enter your password" icon="🔒" onChange={setPassword}/>
+          <InputField placeholder="Phone number" icon="📞" onChange={setPhone}/>
+          <InputField placeholder="Password" icon="🔒" onChange={setPassword}/>
         </>
       )
     };
@@ -57,14 +57,14 @@ const RegisterLoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       
           <Button title={status === "Register" ? "Sign Up" : "Login"} onPress={async () =>  {
               if (status === "Register") {
+                navigation.navigate(`${role}SettingScreen`)
                 await register(name, phone, password, role)
               } else {
                 await login(phone, password, role)
+                navigation.navigate(`${role}MainScreen`)
               }
-
-
-              navigation.navigate("MainScreen")} 
-            }
+            } 
+          }
           />
     
           <Text style={styles.footerText}>

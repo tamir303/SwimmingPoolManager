@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react"
 import Instructor from "../../dto/instructor/instructor.dto"
 import InstructorService from "../../services/instructor.service";
-import NewInstructor from "../../dto/instructor/new-instructor.dto";
 import { Swimming } from "../../utils/swimming-enum.utils";
 import { Availability } from "../../dto/instructor/start-and-end-time.dto";
 
-interface NewInstructorParams {
+interface InstructorParams {
+    password: string
+    id: string,
     name: string,
     specialties: Swimming[],
     availabilities: Availability[]
@@ -28,9 +29,9 @@ export const useInstructors = () => {
       setInstructors(data);
     };
   
-    const addInstructor = async ({ name, specialties, availabilities }: NewInstructorParams) => {
-      const newInstructorDTO = new NewInstructor(name, specialties, availabilities)  
-      await InstructorService.createInstructor(newInstructorDTO);
+    const addInstructor = async ({ password, id, name, specialties, availabilities }: InstructorParams) => {
+      const newInstructorDTO = new Instructor(id, name, specialties, availabilities)  
+      await InstructorService.createInstructor(password, newInstructorDTO);
       await fetchInstructors();
     };
   

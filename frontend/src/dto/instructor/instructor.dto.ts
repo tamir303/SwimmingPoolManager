@@ -6,7 +6,7 @@ import { Availability } from "./start-and-end-time.dto.js";
  *
  * Represents an instructor with their details, specialties, and weekly availability.
  *
- * @param {string | null} instructorId - The unique identifier for the instructor. Can be `null` if the instructor is not yet saved in the system.
+ * @param {string | null} id - The unique identifier for the instructor. Can be `null` if the instructor is not yet saved in the system.
  * @param {string} name - The name of the instructor.
  * @param {Swimming[]} specialties - An array of swimming specialties that the instructor is qualified to teach.
  * @param {Availability[]} availabilities - An array of availability objects representing the instructor's weekly schedule.
@@ -16,13 +16,13 @@ export default class Instructor {
   /**
    * Constructor for the Instructor class.
    *
-   * @param {string | null} instructorId - The unique identifier for the instructor. Can be `null` for new instructors.
+   * @param {string | null} id - The unique identifier for the instructor. Can be `null` for new instructors.
    * @param {string} name - The name of the instructor.
    * @param {Swimming[]} specialties - The swimming styles or specialties the instructor teaches.
    * @param {Availability[]} availabilities - The weekly availability of the instructor.
    */
   constructor(
-    public instructorId: string | null,
+    public id: string,
     public name: string,
     public specialties: Swimming[],
     public availabilities: Availability[] // Size 7 (0-Sunday, 1-Monday, etc.)

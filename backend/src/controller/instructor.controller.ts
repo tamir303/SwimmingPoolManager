@@ -3,9 +3,10 @@ import path from "path";
 import InstructorService from "../service/instructor/instructor.service.js";
 import { Swimming } from "../utils/swimming-enum.utils.js";
 import Instructor from "../dto/instructor/instructor.dto.js";
-import NewInstructor from "../dto/instructor/new-instructor.dto.js";
 import InstructorServiceInterface from "../service/instructor/IInstructor.service.js";
 import { createCustomLogger } from "../etc/logger.etc.js";
+import { ParamsDictionary } from "express-serve-static-core";
+import { ParsedQs } from "qs";
 
 // Initialize logger
 const logger = createCustomLogger({
@@ -34,12 +35,14 @@ export default class InstructorController {
   async createInstructor(req: Request, res: Response): Promise<Response> {
     logger.info("Received request to create a new instructor.");
     try {
-      const instructorData: NewInstructor = req.body;
+      const instructorData: Instructor = req.body.newInstructor;
+      instructorData.availabilities = new Array(7).fill(-1)
+      const password: string = req.body.password;
       logger.info("Validating and creating a new instructor...");
       const newInstructor: Instructor =
-        await this.instructorService.createInstructor(instructorData);
+        await this.instructorService.createInstructor(password, instructorData);
       logger.info(
-        `Instructor created successfully with ID: ${newInstructor.instructorId}`
+        `Instructor created successfully with ID: ${newInstructor.id}`
       );
       return res.status(201).json(newInstructor);
     } catch (error: any) {
@@ -48,6 +51,28 @@ export default class InstructorController {
         process.env.NODE_ENV !== "prod"
           ? error.message
           : "An error occurred while creating an instructor.";
+      return res.status(error.status || 500).json({ error: errorMessage });
+    }
+  }
+
+  async loginInstructor(req: Request, res: Response): Promise<Response> {
+    logger.info("Received login request for instructor.");
+    try {
+      const instructorId: string = req.body.id;
+      const password: string = req.body.password;
+      logger.info("Validating and login instructor...");
+      const instructor: Instructor =
+        await this.instructorService.loginInstructor(password, instructorId);
+      logger.info(
+        `Instructor login successfully with ID: ${instructor.id}`
+      );
+      return res.status(201).json(instructor);
+    } catch (error: any) {
+      logger.error("Error login instructor:", error);
+      const errorMessage =
+        process.env.NODE_ENV !== "prod"
+          ? error.message
+          : "An error occurred while login to an instructor.";
       return res.status(error.status || 500).json({ error: errorMessage });
     }
   }
@@ -153,84 +178,84 @@ export default class InstructorController {
 
   /**
    * Retrieves an instructor by their ID.
-   * @param req - The Express request object. Expects `instructorId` as a route parameter.
+   * @param req - The Express request object. Expects `id` as a route parameter.
    * @param res - The Express response object.
    * @returns The instructor with the specified ID.
    */
   async getInstructorById(req: Request, res: Response): Promise<Response> {
-    const { instructorId } = req.params;
+    const { id } = req.params;
     logger.info(
-      `Received request to fetch instructor with ID: ${instructorId}`
+      `Received request to fetch instructor with ID: ${id}`
     );
     try {
       const instructor: Instructor =
-        await this.instructorService.getInstructorById(instructorId);
-      logger.info(`Instructor with ID ${instructorId} retrieved successfully.`);
+        await this.instructorService.getInstructorById(id);
+      logger.info(`Instructor with ID ${id} retrieved successfully.`);
       return res.status(200).json(instructor);
     } catch (error: any) {
-      logger.error(`Error fetching instructor with ID ${instructorId}:`, error);
+      logger.error(`Error fetching instructor with ID ${id}:`, error);
       const errorMessage =
         process.env.NODE_ENV !== "prod"
           ? error.message
-          : `An error occurred while fetching instructor with ID ${instructorId}`;
+          : `An error occurred while fetching instructor with ID ${id}`;
       return res.status(error.status || 500).json({ error: errorMessage });
     }
   }
 
   /**
    * Updates an instructor by their ID.
-   * @param req - The Express request object. Expects `instructorId` as a route parameter and an `Instructor` object in the body.
+   * @param req - The Express request object. Expects `id` as a route parameter and an `Instructor` object in the body.
    * @param res - The Express response object.
    * @returns The updated instructor.
    */
   async updateInstructor(req: Request, res: Response): Promise<Response> {
-    const { instructorId } = req.params;
+    const { id } = req.params;
     logger.info(
-      `Received request to update instructor with ID: ${instructorId}.`
+      `Received request to update instructor with ID: ${id}.`
     );
     try {
       const instructorData: Instructor = req.body;
       logger.info("Validating and updating instructor data...");
       const updatedInstructor: Instructor | null =
         await this.instructorService.updateInstructor(
-          instructorId,
+          id,
           instructorData
         );
-      logger.info(`Instructor with ID ${instructorId} updated successfully.`);
+      logger.info(`Instructor with ID ${id} updated successfully.`);
       return res.status(200).json(updatedInstructor);
     } catch (error: any) {
-      logger.error(`Error updating instructor with ID ${instructorId}:`, error);
+      logger.error(`Error updating instructor with ID ${id}:`, error);
       const errorMessage =
         process.env.NODE_ENV !== "prod"
           ? error.message
-          : `An error occurred while updating instructor with ID ${instructorId}`;
+          : `An error occurred while updating instructor with ID ${id}`;
       return res.status(error.status || 500).json({ error: errorMessage });
     }
   }
 
   /**
    * Deletes an instructor by their ID.
-   * @param req - The Express request object. Expects `instructorId` as a route parameter.
+   * @param req - The Express request object. Expects `id` as a route parameter.
    * @param res - The Express response object.
    * @returns A success message.
    */
   async deleteInstructor(req: Request, res: Response): Promise<Response> {
-    const { instructorId } = req.params;
+    const { id } = req.params;
     logger.info(
-      `Received request to delete instructor with ID: ${instructorId}`
+      `Received request to delete instructor with ID: ${id}`
     );
     try {
-      await this.instructorService.deleteInstructor(instructorId);
-      logger.info(`Instructor with ID ${instructorId} deleted successfully.`);
+      await this.instructorService.deleteInstructor(id);
+      logger.info(`Instructor with ID ${id} deleted successfully.`);
       return res
         .status(200)
         .json({ message: "Instructor deleted successfully" });
     } catch (error: any) {
-      logger.error(`Error deleting instructor with ID ${instructorId}:`, error);
+      logger.error(`Error deleting instructor with ID ${id}:`, error);
       const errorMessage =
         process.env.NODE_ENV !== "prod"
           ? error.message
-          : `An error occurred while deleting instructor with ID ${instructorId}`;
+          : `An error occurred while deleting instructor with ID ${id}`;
       return res.status(error.status || 500).json({ error: errorMessage });
     }
   }

@@ -8,7 +8,7 @@ import { Availability } from "../dto/instructor/start-and-end-time.dto.js";
  */
 export interface IInstructor extends Document {
   /** The unique identifier of the instructor. */
-  _id: mongoose.Types.ObjectId;
+  _id: string;
   /** The name of the instructor. */
   name: string;
   /** An array of swimming specialties taught by the instructor. */
@@ -19,6 +19,7 @@ export interface IInstructor extends Document {
    * - Each entry can either be `-1` (unavailable) or an object with `startTime` and `endTime`.
    */
   availabilities: Availability[];
+  password: string;
 }
 
 /**
@@ -27,23 +28,16 @@ export interface IInstructor extends Document {
  */
 const InstructorSchema = new Schema<IInstructor>(
   {
-    /** The name of the instructor. */
+    _id: { type: String, required: true },
+
     name: { type: String, required: true },
 
-    /** An array of specialties taught by the instructor. */
     specialties: {
       type: [String],
       enum: Object.values(Swimming), // Ensures valid specialties from the Swimming enum.
       required: true,
     },
 
-    /**
-     * Weekly availability of the instructor.
-     * - Must have exactly 7 entries (0-Sunday, 1-Monday, ..., 6-Saturday).
-     * - Each entry can be:
-     *   - `-1` to indicate unavailability.
-     *   - An object with `startTime` and `endTime` (both Date objects).
-     */
     availabilities: {
       type: [
         {
@@ -68,13 +62,16 @@ const InstructorSchema = new Schema<IInstructor>(
         },
       ],
       validate: {
-        validator: (arr: any[]): boolean => arr.length === 7, // Ensure exactly 7 entries.
+        validator: (arr: any[]): boolean => arr.length <= 7, // Ensure exactly 7 entries.
         message:
-          "Availabilities must have exactly 7 entries (one for each day of the week).",
+          "Availabilities must have exactly or less than 7 entries (one for each day of the week).",
       },
       required: true,
     },
+
+    password: { type: String, required: true },
   },
+
   { timestamps: true } // Automatically adds `createdAt` and `updatedAt` fields.
 );
 

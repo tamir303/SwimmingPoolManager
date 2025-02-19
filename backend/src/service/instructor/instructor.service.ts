@@ -1,7 +1,6 @@
 import createHttpError from "http-errors";
 import path from "path";
 import Instructor from "../../dto/instructor/instructor.dto.js";
-import NewInstructor from "../../dto/instructor/new-instructor.dto.js";
 import InstructorRepositoryInterface from "../../repository/instructor/IInstructor.repository.js";
 import InstructorRepository from "../../repository/instructor/instructor.repository.js";
 import { Swimming } from "../../utils/swimming-enum.utils.js";
@@ -38,28 +37,49 @@ export default class InstructorService implements InstructorServiceInterface {
    * @returns A promise that resolves to the newly created instructor.
    * @throws {BadRequest} If the data is invalid.
    */
-  async createInstructor(instructorData: NewInstructor): Promise<Instructor> {
+  async createInstructor(password: string, instructorData: Instructor): Promise<Instructor> {
     logger.info("Validating instructor data...");
     this.validateInstructorData(instructorData);
-
     const instructor: Instructor = new Instructor(
-      null, // `instructorId` will be assigned by the database
+      instructorData.id,
       instructorData.name,
       instructorData.specialties,
-      instructorData.availabilities
+      instructorData.availabilities,
+      password
     );
 
     try {
       logger.info("Creating a new instructor...");
       const createdInstructor = await this.instructorRepository.create(
+        password,
         instructor
       );
       logger.info(
-        `Instructor created successfully with ID: ${createdInstructor.instructorId}`
+        `Instructor created successfully with ID: ${createdInstructor.id}`
       );
       return createdInstructor;
     } catch (error) {
       logger.error("Error occurred while creating instructor:", error);
+      throw error;
+    }
+  }
+
+  async loginInstructor(password: string, instructorId: string): Promise<Instructor> {
+    logger.info("Validating instructor data...");
+
+    try {
+      logger.info("Login to instructor...");
+      const instructor = await this.getInstructorById(instructorId);
+      if (instructor.password === password) {
+        logger.info(
+          `Instructor created successfully with ID: ${instructor.id}`
+        );
+        return instructor;
+    } else {
+      throw Error(`${password} is incorrect!`)
+    }
+    } catch (error) {
+      logger.error("Error occurred while login into instructor:", error);
       throw error;
     }
   }
@@ -176,57 +196,58 @@ export default class InstructorService implements InstructorServiceInterface {
 
   /**
    * Retrieves an instructor by their ID.
-   * @param instructorId - The unique identifier of the instructor.
+   * @param id - The unique identifier of the instructor.
    * @returns A promise that resolves to the instructor.
    * @throws {NotFound} If no instructor is found.
    */
-  async getInstructorById(instructorId: string): Promise<Instructor> {
-    logger.info(`Fetching instructor by ID: ${instructorId}...`);
-    const instructor = await this.instructorRepository.findById(instructorId);
+  async getInstructorById(id: string): Promise<Instructor> {
+    logger.info(`Fetching instructor by ID: ${id}...`);
+    const instructor = await this.instructorRepository.findById(id);
 
     if (!instructor) {
-      logger.warn(`Instructor with ID ${instructorId} not found.`);
+      logger.warn(`Instructor with ID ${id} not found.`);
       throw new createHttpError.NotFound(
-        `Instructor with ID ${instructorId} not found`
+        `Instructor with ID ${id} not found`
       );
     }
 
-    logger.info(`Instructor with ID ${instructorId} retrieved successfully.`);
+    logger.info(`Instructor with ID ${id} retrieved successfully.`);
     return instructor;
   }
 
   /**
    * Updates an instructor by their ID.
-   * @param instructorId - The unique identifier of the instructor to update.
+   * @param id - The unique identifier of the instructor to update.
    * @param instructorData - The updated instructor data.
    * @returns A promise that resolves to the updated instructor or `null` if not found.
    * @throws {NotFound} If no instructor is found with the given ID.
    * @throws {BadRequest} If the data is invalid.
    */
   async updateInstructor(
-    instructorId: string,
+    id: string,
     instructorData: Instructor
   ): Promise<Instructor | null> {
     logger.info(
-      `Validating and updating instructor with ID: ${instructorId}...`
+      `Validating and updating instructor with ID: ${id}...`
     );
-    const instructor = await this.getInstructorById(instructorId);
+    const instructor = await this.getInstructorById(id);
 
     this.validateInstructorData(instructorData);
 
     const updatedInstructor: Instructor = {
-      instructorId,
+      id,
       name: instructorData.name,
       specialties: [...instructorData.specialties],
       availabilities: [...instructorData.availabilities],
+      password: instructor.password
     };
 
     try {
       const result = await this.instructorRepository.update(
-        instructorId,
+        id,
         updatedInstructor
       );
-      logger.info(`Instructor with ID ${instructorId} updated successfully.`);
+      logger.info(`Instructor with ID ${id} updated successfully.`);
       return result;
     } catch (error) {
       logger.error("Error occurred while updating instructor:", error);
@@ -236,20 +257,20 @@ export default class InstructorService implements InstructorServiceInterface {
 
   /**
    * Deletes an instructor by their ID.
-   * @param instructorId - The unique identifier of the instructor to delete.
+   * @param id - The unique identifier of the instructor to delete.
    * @returns A promise that resolves to a boolean indicating success.
    */
-  async deleteInstructor(instructorId: string): Promise<boolean> {
-    logger.info(`Deleting instructor with ID: ${instructorId}...`);
+  async deleteInstructor(id: string): Promise<boolean> {
+    logger.info(`Deleting instructor with ID: ${id}...`);
     try {
-      const result = await this.instructorRepository.delete(instructorId);
-      logger.info(`Instructor with ID ${instructorId} deleted successfully.`);
+      const result = await this.instructorRepository.delete(id);
+      logger.info(`Instructor with ID ${id} deleted successfully.`);
 
       const resLessons =
-        await this.lessonRepository.deleteLessonsByInstructorId(instructorId);
+        await this.lessonRepository.deleteLessonsByInstructorId(id);
 
       if (resLessons)
-        logger.info(`All lessons of ${instructorId} deleted successfully.`);
+        logger.info(`All lessons of ${id} deleted successfully.`);
 
       return result;
     } catch (error) {
@@ -285,23 +306,15 @@ export default class InstructorService implements InstructorServiceInterface {
    * @throws {BadRequest} If any data is invalid.
    */
   private validateInstructorData(
-    instructorData: Instructor | NewInstructor
+    instructorData: Instructor
   ): void {
     logger.info("Validating instructor data...");
     if (
-      instructorData.availabilities.length === 0 ||
       instructorData.availabilities.length > 7
     ) {
       logger.warn("Invalid availabilities length.");
       throw new createHttpError.BadRequest(
-        "The availabilities for the new instructor must be between 1 and 7 entries."
-      );
-    }
-
-    if (instructorData.specialties.length === 0) {
-      logger.warn("No specialties provided for the instructor.");
-      throw new createHttpError.BadRequest(
-        "The instructor must have at least one specialty."
+        "The availabilities for the new instructor must be between 0 and 7 entries."
       );
     }
 
@@ -345,12 +358,6 @@ export default class InstructorService implements InstructorServiceInterface {
           );
         }
       }
-    }
-
-    if (numDays === 0) {
-      throw new createHttpError.BadRequest(
-        "Instructor must have some availability during the week."
-      );
     }
 
     // Validate each specialty against the Swimming enum

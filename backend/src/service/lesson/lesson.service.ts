@@ -104,10 +104,10 @@ export default class LessonService implements LessonServiceInterface {
       }
 
       logger.info(
-        `Checking for overlapping lessons for the instructor ${instructorData.instructorId}.`
+        `Checking for overlapping lessons for the instructor ${instructorData.id}.`
       );
       const exisitngLessonsOfInstructor = await this.getLessonsOfInstrucorByDay(
-        instructorData.instructorId!,
+        instructorData.id!,
         lessonData.startAndEndTime.endTime
       );
       this.validateOverlappingLessonsForInstructor(
@@ -294,10 +294,10 @@ export default class LessonService implements LessonServiceInterface {
         );
 
       logger.info(
-        `Checking for overlapping lessons for the instructor ${instructorData.instructorId}.`
+        `Checking for overlapping lessons for the instructor ${instructorData.id}.`
       );
       const exisitngLessonsOfInstructor = await this.getLessonsOfInstrucorByDay(
-        instructorData.instructorId!,
+        instructorData.id!,
         lessonData.startAndEndTime.endTime
       );
       this.validateOverlappingLessonsForInstructor(

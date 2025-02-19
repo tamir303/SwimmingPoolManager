@@ -1,6 +1,5 @@
 import InstructorService from "../../src/service/instructor/instructor.service.js";
 import Instructor from "../../src/dto/instructor/instructor.dto.js";
-import NewInstructor from "../../src/dto/instructor/new-instructor.dto.js";
 import { Swimming } from "../../src/utils/swimming-enum.utils.js";
 import createHttpError from "http-errors";
 import { jest } from "@jest/globals";
@@ -36,7 +35,8 @@ describe("InstructorService", () => {
 
   describe("createInstructor", () => {
     it("should create a new instructor with valid data", async () => {
-      const newInstructor = new NewInstructor(
+      const newInstructor = new Instructor(
+        "1234",
         "John Doe",
         ["BACK_STROKE"] as Swimming[],
         [
@@ -50,18 +50,20 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
       const createdInstructor = new Instructor(
         "123",
         newInstructor.name,
         newInstructor.specialties,
-        newInstructor.availabilities
+        newInstructor.availabilities,
+        "123"
       );
 
       mockInstructorRepo.create.mockResolvedValue(createdInstructor);
 
-      const result = await service.createInstructor(newInstructor);
+      const result = await service.createInstructor("1234", newInstructor);
 
       expect(result).toEqual(createdInstructor);
       expect(mockInstructorRepo.create).toHaveBeenCalledWith(
@@ -71,19 +73,22 @@ describe("InstructorService", () => {
     });
 
     it("should throw BadRequest if availabilities length is invalid", async () => {
-      const invalidInstructor = new NewInstructor(
+      const invalidInstructor = new Instructor(
+        "1234",
         "John Doe",
         ["BACK_STROKE"] as Swimming[],
-        []
+        [],
+        "123"
       );
 
-      await expect(service.createInstructor(invalidInstructor)).rejects.toThrow(
+      await expect(service.createInstructor("123", invalidInstructor)).rejects.toThrow(
         createHttpError.BadRequest
       );
     });
 
     it("should throw BadRequest if specialties are empty", async () => {
-      const invalidInstructor = new NewInstructor(
+      const invalidInstructor = new Instructor(
+        "1234",
         "John Doe",
         [],
         [
@@ -97,16 +102,18 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
-      await expect(service.createInstructor(invalidInstructor)).rejects.toThrow(
+      await expect(service.createInstructor("123", invalidInstructor)).rejects.toThrow(
         createHttpError.BadRequest
       );
     });
 
     it("should throw BadRequest if time ranges are invalid", async () => {
-      const invalidInstructor = new NewInstructor(
+      const invalidInstructor = new Instructor(
+        "1234",
         "John Doe",
         ["BACK_STROKE"] as Swimming[],
         [
@@ -120,10 +127,11 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
-      await expect(service.createInstructor(invalidInstructor)).rejects.toThrow(
+      await expect(service.createInstructor("123", invalidInstructor)).rejects.toThrow(
         createHttpError.BadRequest
       );
     });
@@ -147,7 +155,8 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
       const updatedData = new Instructor(
         instructorId,
@@ -164,7 +173,8 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       mockInstructorRepo.findById.mockResolvedValue(existingInstructor);
@@ -198,7 +208,8 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       mockInstructorRepo.findById.mockResolvedValue(null);
@@ -225,13 +236,15 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
       const invalidData = new Instructor(
         instructorId,
         "Jane Doe",
         [],
-        [] // Invalid specialties and availabilities
+        [],
+        "123"
       );
 
       mockInstructorRepo.findById.mockResolvedValue(existingInstructor);
@@ -258,7 +271,8 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
       const updatedData = new Instructor(
         instructorId,
@@ -275,7 +289,8 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       mockInstructorRepo.findById.mockResolvedValue(existingInstructor);
@@ -289,7 +304,8 @@ describe("InstructorService", () => {
 
   describe("Edge Case Validation", () => {
     it("should throw BadRequest if availabilities contain invalid times", async () => {
-      const invalidInstructor = new NewInstructor(
+      const invalidInstructor = new Instructor(
+        "1234",
         "John Doe",
         ["BACK_STROKE"] as Swimming[],
         [
@@ -297,28 +313,32 @@ describe("InstructorService", () => {
             startTime: new Date("2025-01-16T18:00:00Z"),
             endTime: new Date("2025-01-16T09:00:00Z"), // Invalid time range
           },
-        ]
+        ],
+        "123"
       );
 
-      await expect(service.createInstructor(invalidInstructor)).rejects.toThrow(
+      await expect(service.createInstructor("123", invalidInstructor)).rejects.toThrow(
         createHttpError.BadRequest
       );
     });
 
     it("should throw BadRequest if no availability days are provided", async () => {
-      const invalidInstructor = new NewInstructor(
+      const invalidInstructor = new Instructor(
+        "1234",
         "John Doe",
         ["BACK_STROKE"] as Swimming[],
-        [-1, -1, -1, -1, -1, -1, -1] // All unavailable days
+        [-1, -1, -1, -1, -1, -1, -1],
+        "123"
       );
 
-      await expect(service.createInstructor(invalidInstructor)).rejects.toThrow(
+      await expect(service.createInstructor("123", invalidInstructor)).rejects.toThrow(
         createHttpError.BadRequest
       );
     });
 
     it("should throw BadRequest if name is empty or whitespace", async () => {
-      const invalidInstructor = new NewInstructor(
+      const invalidInstructor = new Instructor(
+        "1234",
         "   ", // Invalid name
         ["BACK_STROKE"] as Swimming[],
         [
@@ -332,10 +352,11 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
-      await expect(service.createInstructor(invalidInstructor)).rejects.toThrow(
+      await expect(service.createInstructor("123", invalidInstructor)).rejects.toThrow(
         createHttpError.BadRequest
       );
     });
@@ -355,7 +376,8 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]),
+        ],
+        "123"),
       ];
 
       mockInstructorRepo.findAll.mockResolvedValue(instructors);
@@ -385,7 +407,8 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       mockInstructorRepo.findById.mockResolvedValue(instructor);
@@ -422,7 +445,8 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]),
+        ],
+        "123"),
       ];
 
       mockInstructorRepo.findBySpecialties.mockResolvedValue(instructors);
@@ -458,7 +482,8 @@ describe("InstructorService", () => {
           -1,
           -1,
           -1,
-        ]),
+        ],
+        "123"),
       ];
 
       mockInstructorRepo.findAvailableInstructors.mockResolvedValue(

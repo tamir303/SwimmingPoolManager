@@ -53,12 +53,13 @@ describe("LessonService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       const newLesson = new NewLesson(
         LessonType.PUBLIC,
-        instructor.instructorId!,
+        instructor.id!,
         [Swimming.BACK_STROKE],
         new StartAndEndTime(
           new Date("2025-01-14T10:00:00Z"),
@@ -137,12 +138,13 @@ describe("LessonService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       const newLesson = new NewLesson(
         LessonType.PUBLIC,
-        instructor.instructorId!,
+        instructor.id!,
         [Swimming.BACK_STROKE],
         new StartAndEndTime(
           new Date("2025-01-14T10:00:00Z"),
@@ -180,12 +182,13 @@ describe("LessonService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       const newLesson = new NewLesson(
         LessonType.PUBLIC,
-        instructor.instructorId!,
+        instructor.id!,
         [Swimming.BACK_STROKE],
         new StartAndEndTime(
           new Date("2025-01-14T10:00:00Z"),
@@ -204,7 +207,7 @@ describe("LessonService", () => {
         "54321",
         LessonType.PUBLIC,
         [Swimming.BACK_STROKE],
-        instructor.instructorId!,
+        instructor.id!,
         new StartAndEndTime(
           new Date("2025-01-14T10:00:00Z"),
           new Date("2025-01-14T11:00:00Z")
@@ -244,7 +247,8 @@ describe("LessonService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       const newLesson = new NewLesson(
@@ -268,7 +272,7 @@ describe("LessonService", () => {
         "54321",
         LessonType.PUBLIC,
         [Swimming.BACK_STROKE],
-        anotherInstructor.instructorId!,
+        anotherInstructor.id!,
         new StartAndEndTime(
           new Date("2025-01-14T09:30:00Z"),
           new Date("2025-01-14T10:30:00Z")
@@ -310,7 +314,8 @@ describe("LessonService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       const newLesson = new NewLesson(
@@ -334,7 +339,7 @@ describe("LessonService", () => {
         "54321",
         LessonType.PUBLIC,
         [Swimming.BACK_STROKE],
-        anotherInstructor.instructorId!,
+        anotherInstructor.id!,
         new StartAndEndTime(
           new Date("2025-01-14T10:45:00Z"),
           new Date("2025-01-14T11:45:00Z")
@@ -412,7 +417,8 @@ describe("LessonService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       const existingLesson = new Lesson(
@@ -487,7 +493,8 @@ describe("LessonService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       const existingLesson = new Lesson(
@@ -512,7 +519,7 @@ describe("LessonService", () => {
         "54321",
         LessonType.PUBLIC,
         [Swimming.BACK_STROKE],
-        anotherInstructor.instructorId!,
+        anotherInstructor.id!,
         new StartAndEndTime(
           new Date("2025-01-14T09:30:00Z"),
           new Date("2025-01-14T10:30:00Z")
@@ -583,7 +590,8 @@ describe("LessonService", () => {
           -1,
           -1,
           -1,
-        ]
+        ],
+        "123"
       );
 
       const existingLesson = new Lesson(
@@ -608,7 +616,7 @@ describe("LessonService", () => {
         "54321",
         LessonType.PUBLIC,
         [Swimming.BACK_STROKE],
-        anotherInstructor.instructorId!,
+        anotherInstructor.id!,
         new StartAndEndTime(
           new Date("2025-01-14T10:45:00Z"),
           new Date("2025-01-14T11:45:00Z")
@@ -716,7 +724,7 @@ describe("LessonService", () => {
 
     it("should delete all lessons for a given instructor ID", async () => {
       mockInstructorService.getInstructorById.mockResolvedValue(
-        new Instructor("123", "John Doe", [Swimming.BACK_STROKE], [])
+        new Instructor("123", "John Doe", [Swimming.BACK_STROKE], [],"123")
       );
       mockLessonRepo.deleteLessonsByInstructorId.mockResolvedValue(3);
 

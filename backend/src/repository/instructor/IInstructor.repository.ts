@@ -11,7 +11,7 @@ export default interface InstructorRepositoryInterface {
    * @param instructorData - The data for the new instructor.
    * @returns A promise that resolves to the newly created instructor.
    */
-  create(instructorData: Instructor): Promise<Instructor>;
+  create(password: string, instructorData: Instructor): Promise<Instructor>;
 
   /**
    * Retrieves all instructors from the data source.

@@ -25,9 +25,10 @@ export default class InstructorRepository
    * @param instructorData - The data for the new instructor.
    * @returns A promise that resolves to the newly created instructor.
    */
-  async create(instructorData: Instructor): Promise<Instructor> {
+  async create(password: string, instructorData: Instructor): Promise<Instructor> {
     logger.info("Creating a new instructor...");
     try {
+      instructorData.password = password
       const newInstructor = new InstructorModel(
         Instructor.toModel(instructorData)
       );

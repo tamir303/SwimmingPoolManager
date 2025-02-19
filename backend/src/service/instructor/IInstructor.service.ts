@@ -1,5 +1,4 @@
 import Instructor from "../../dto/instructor/instructor.dto.js";
-import NewInstructor from "../../dto/instructor/new-instructor.dto.js";
 import { Swimming } from "../../utils/swimming-enum.utils.js";
 
 /**
@@ -7,12 +6,13 @@ import { Swimming } from "../../utils/swimming-enum.utils.js";
  * Defines the contract for operations related to instructor management.
  */
 export default interface InstructorServiceInterface {
+  loginInstructor(password: string, instructorId: string): Instructor | PromiseLike<Instructor>;
   /**
    * Creates a new instructor.
    * @param instructorData - The data for the new instructor.
    * @returns A promise that resolves to the newly created instructor.
    */
-  createInstructor(instructorData: NewInstructor): Promise<Instructor>;
+  createInstructor(password: string, instructorData: Instructor): Promise<Instructor>;
 
   /**
    * Retrieves all instructors.

@@ -99,4 +99,27 @@ export default StyleSheet.create({
     alignItems: 'center',
     marginVertical: 5,
   },
+  dayPickerContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  dayPickerButton: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#6C63FF",
+    borderRadius: 5,
+    marginHorizontal: 5,
+    backgroundColor: "#4A148C",
+  },
+  dayPickerButtonActive: {
+    backgroundColor: "#6C63FF",
+  },
+  dayPickerText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  dayPickerTextActive: {
+    color: "#fff",
+  },
 });

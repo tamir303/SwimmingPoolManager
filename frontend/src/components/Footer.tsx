@@ -1,29 +1,32 @@
 import React from 'react';
 import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text } from 'react-native';
+import { useAuth } from '../hooks/authContext';
 
 interface FooterProps {
   navigation: any;
 }
 
 const Footer: React.FC<FooterProps> = ({ navigation }) => {
+  const { isInstructor } = useAuth();
+
   return (
     <SafeAreaView style={styles.footerContainer}>
       <View style={styles.footer}>
         <TouchableOpacity 
           style={styles.footerButton} 
-          onPress={() => navigation.navigate("MainScreen")}
+          onPress={() => navigation.navigate(true ? `InstructorMainScreen` : `StudentMainScreen`)}
         >
           <Text style={styles.footerButtonText}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.footerButton} 
-          onPress={() => navigation.navigate("CalendarScreen")}
+          onPress={() => navigation.navigate(true ? "InstructorCalendarScreen" : "StudentCalendarScreen")}
         >
           <Text style={styles.footerButtonText}>Calendar</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.footerButton} 
-          onPress={() => navigation.navigate("InstructorScreen")}
+          onPress={() => navigation.navigate(true ? "InstructorSettingScreen" : "StudentSettingScreen")}
         >
           <Text style={styles.footerButtonText}>Settings</Text>
         </TouchableOpacity>

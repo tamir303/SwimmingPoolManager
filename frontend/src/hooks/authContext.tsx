@@ -2,18 +2,16 @@ import React, {
     createContext,
     useState,
     useContext,
-    useEffect,
     ReactNode,
   } from "react";
   import InstructorService from "../services/instructor.service";
-  import NewInstructor from "../dto/instructor/new-instructor.dto";
   import Instructor from "../dto/instructor/instructor.dto";
   
   /**
    * Represents the user type in the system.
    * Could be 'instructor' or 'student'.
    */
-  type UserType = "instructor" | "student";
+  type UserType = "Instructor" | "Student";
   
   /**
    * Minimal user model that includes userType,
@@ -22,7 +20,6 @@ import React, {
   interface AuthUser {
     id?: string;
     name: string;
-    phone: string;
     userType: UserType;
   }
   
@@ -76,22 +73,23 @@ import React, {
       userType: UserType
     ): Promise<void> => {
       try {
-        if (userType === "instructor") {
+        if (userType === "Instructor") {
           const instructorId = phone;
-          const instructorData: Instructor = await InstructorService.getInstructorById(
-            instructorId
+          const instructorData: Instructor = await InstructorService.loginInstructor(
+            instructorId,
+            password
           );
+
           setUser({
-            id: instructorData.instructorId || undefined,
+            id: instructorData.id,
             name: instructorData.name,
-            phone,
-            userType: "instructor",
+            userType: "Instructor",
           });
         } else {
           setUser({
+            id: phone,
             name: "StudentName",
-            phone,
-            userType: "student",
+            userType: "Student",
           });
         }
   
@@ -117,29 +115,30 @@ import React, {
       try {
         // For demonstration, let's say if userType is "instructor",
         // we create them via InstructorService:
-        if (userType === "instructor") {
-          const newInstructor: NewInstructor = {
+        if (userType === "Instructor") {
+          const newInstructor: Instructor = {
+            id: phone,
             name,
             specialties: [],
             availabilities: [],
           };
           const createdInstructor = await InstructorService.createInstructor(
+            password,
             newInstructor
-          );
+        );
           // Then store them as the current user
           setUser({
-            id: createdInstructor.instructorId || undefined,
-            name: createdInstructor.name,
-            phone, // We only have phone from the form
-            userType: "instructor",
+            id: phone,
+            name,
+            userType: "Instructor",
           });
         } else {
           // If user is a student, call your student register endpoint
           // For now, just store them in local state
           setUser({
+            id: phone,
             name,
-            phone,
-            userType: "student",
+            userType: "Student",
           });
         }
         // In a real app, store token or relevant info here
@@ -158,7 +157,7 @@ import React, {
       // e.g. AsyncStorage.removeItem("token");
     };
   
-    const isInstructor = user?.userType === "instructor";
+    const isInstructor = user?.userType === "Instructor";
   
     return (
       <AuthContext.Provider

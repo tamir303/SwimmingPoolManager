@@ -4,7 +4,7 @@ import { Swimming } from "../utils/swimming-enum.utils";
 export const isInstructorValid = (
   name: string,
   specialties: Swimming[],
-  availabilities: Availability[]
+  availabilities: any[]
 ): { valid: boolean; message?: string } => {
   if (!availabilities.some((a) => a !== -1)) {
     return {

@@ -8,7 +8,6 @@
  */
 
 import axios from "axios";
-import NewInstructor from "../dto/instructor/new-instructor.dto";
 import Instructor from "../dto/instructor/instructor.dto";
 import { Swimming } from "../utils/swimming-enum.utils";
 import getEnvVariables from "../etc/load-variables";
@@ -42,14 +41,32 @@ export default class InstructorService {
   /**
    * Creates a new instructor.
    *
-   * @param {NewInstructor} newInstructor - The data for the new instructor.
+   * @param {Instructor} newInstructor - The data for the new instructor.
    * @returns {Promise<Instructor>} The created instructor.
    */
   static async createInstructor(
-    newInstructor: NewInstructor
+    password: string,
+    newInstructor: Instructor
   ): Promise<Instructor> {
+    console.log({
+      password: password,
+      newInstructor: newInstructor
+    })
     return this.requestWrapper(() =>
-      axios.post<Instructor>(BASE_URL, newInstructor).then((res) => res.data)
+      axios.post<Instructor>(BASE_URL, {password, newInstructor}).then((res) => res.data)
+    );
+  }
+
+  static async loginInstructor(
+    id: string,
+    password: string
+  ): Promise<Instructor> {
+    console.log({
+      password: password,
+      id: id
+    })
+    return this.requestWrapper(() =>
+      axios.post<Instructor>(`${BASE_URL}/login`, {password, id}).then((res) => res.data)
     );
   }
 

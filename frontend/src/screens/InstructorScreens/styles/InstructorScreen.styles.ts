@@ -157,4 +157,14 @@ export default StyleSheet.create({
     width: "40%",
     borderColor: "#6C63FF",
   },
+  timePickerRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  timePickerItem: {
+    flex: 1,
+    marginHorizontal: 5,
+  },
 });

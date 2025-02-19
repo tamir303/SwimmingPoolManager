@@ -1,41 +1,45 @@
-import { StyleSheet, Dimensions } from "react-native"
+import { StyleSheet, Dimensions, StatusBar } from "react-native";
+
 const { width, height } = Dimensions.get("window");
 
 export default StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#f8f8f8",
+    backgroundColor: "#F8F9FA",
     padding: 10,
+    paddingTop: StatusBar.currentHeight || 24,
   },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
+  simpleHeader: {
     alignItems: "center",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    backgroundColor: "#fff",
-    borderBottomWidth: 1,
-    borderBottomColor: "#ddd",
+    marginBottom: 10,
   },
-  backArrow: {
-    fontSize: 20,
-    color: "#333",
-  },
-  headerTitle: {
-    fontSize: 22,
+  simpleHeaderText: {
+    fontSize: 26,
     fontWeight: "bold",
     color: "#333",
   },
-  profileIcon: {
-    fontSize: 20,
-    color: "#333",
+  weekNavContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 10,
+  },
+  navButton: {
+    backgroundColor: "#6C63FF",
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 5,
+  },
+  navButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
   },
   calendarContainer: {
     flexDirection: "row",
-    alignItems: "flex-start",
     paddingVertical: 10,
   },
-  // Hours column on the left.
+  // Hours column
   hoursColumn: {
     width: 50,
     justifyContent: "flex-start",
@@ -52,8 +56,9 @@ export default StyleSheet.create({
     fontSize: 14,
     color: "#555",
   },
-  // Each day column.
+  // Day column
   dayColumn: {
+    width: 150,
     marginHorizontal: 5,
     alignItems: "center",
   },
@@ -62,16 +67,20 @@ export default StyleSheet.create({
     fontWeight: "600",
     textAlign: "center",
     marginBottom: 5,
-  },
-  // Each cell in a day column.
-  cell: {
-    width: 40,
     height: 40,
-    marginVertical: 2,
-    justifyContent: "center",
-    alignItems: "center",
+  },
+  timeline: {
+    width: "100%",
+    backgroundColor: "#eee",
+    position: "relative",
+  },
+  cell: {
+    width: "100%",
+    height: 40,
     borderWidth: 1,
     borderColor: "#ccc",
+    justifyContent: "center",
+    alignItems: "center",
   },
   cellText: {
     color: "#fff",
@@ -81,6 +90,7 @@ export default StyleSheet.create({
     marginTop: 20,
     alignSelf: "center",
   },
+  // Modal styles
   modalContainer: {
     position: "absolute",
     top: "20%",

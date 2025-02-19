@@ -5,7 +5,6 @@ import {
   ScrollView,
   TouchableOpacity,
   SafeAreaView,
-  StyleSheet,
 } from "react-native";
 import { Button } from "react-native-paper";
 import LessonService from "../../services/lesson.service";
@@ -14,14 +13,8 @@ import Lesson from "../../dto/lesson/lesson.dto";
 import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { useAuth } from "../../hooks/authContext";
 import Footer from "../../components/Footer";
-import styles from "./styles/CalenderScreen.styles";
 import CustomModal from "../../components/Modal";
-
-// Helper: Format a swimming type string (unused in this example but kept for reference)
-const formatSpecialty = (specialty: string): string => {
-  const lower = specialty.toLowerCase().replace(/_/g, " ");
-  return lower.charAt(0).toUpperCase() + lower.slice(1);
-};
+import styles from "./styles/CalenderScreen.styles";
 
 // Helper function to get the dates for the current week (Sunday to Saturday)
 const getWeekDates = (offset: number = 0): Date[] => {
@@ -41,37 +34,41 @@ const CalendarScreen: React.FC = () => {
   const isFocused = useIsFocused();
   const { user } = useAuth();
 
-  // Week dates for the calendar (current week)
-  const [weekDates, setWeekDates] = useState<Date[]>(getWeekDates());
-  // All lessons for the current week
+  // Week offset state (in days; multiples of 7)
+  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
+  const [weekDates, setWeekDates] = useState<Date[]>(getWeekDates(currentWeekOffset));
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  // Fetched instructor data for the current user
   const [userInstructor, setUserInstructor] = useState<any>(null);
-  // Selected cell for modal details
   const [selectedCell, setSelectedCell] = useState<{
     day: string;
     hour: string;
     lessons: Lesson[];
     date: Date;
   } | null>(null);
-  // Control modal visibility
   const [modalVisible, setModalVisible] = useState(false);
 
-  // Hours to display in the left column (8 AM to 10 PM)
-  const hours = Array.from({ length: 15 }, (_, i) => i + 8);
+  // Gantt chart settings: Timeline from 8 AM to 10 PM
+  const timelineStartHour = 8;
+  const timelineEndHour = 22;
+  const cellHeight = 40; // each hour cell height
+  const timelineTotalHeight = (timelineEndHour - timelineStartHour) * cellHeight;
+  const hours = Array.from({ length: timelineEndHour - timelineStartHour }, (_, i) => i + timelineStartHour);
+
+  // Update weekDates when week offset changes.
+  useEffect(() => {
+    setWeekDates(getWeekDates(currentWeekOffset));
+  }, [currentWeekOffset]);
 
   // Fetch lessons for the current week.
   useEffect(() => {
     const fetchLessons = async () => {
       if (weekDates.length === 0) return;
-      // Define range: Sunday 6:00 AM to Saturday 11:59:59 PM (you can adjust as needed)
       const start = new Date(weekDates[0]);
       start.setHours(6, 0, 0, 0);
       const end = new Date(weekDates[6]);
       end.setHours(23, 59, 59, 999);
       try {
         const fetchedLessons = await LessonService.getLessonsWithinRange(start, end);
-        // Normalize lesson times
         const normalizedLessons: Lesson[] = fetchedLessons.map((lesson) => ({
           ...lesson,
           startAndEndTime: {
@@ -84,13 +81,12 @@ const CalendarScreen: React.FC = () => {
         console.error("Error fetching lessons:", error);
       }
     };
-
     if (isFocused) {
       fetchLessons();
     }
   }, [weekDates, isFocused]);
 
-  // Fetch the instructor data for the current user.
+  // Fetch instructor data.
   useEffect(() => {
     const fetchInstructor = async () => {
       if (user && user.id) {
@@ -110,15 +106,13 @@ const CalendarScreen: React.FC = () => {
         lessonDate.getHours() === parseInt(hour.split(":")[0], 10)
       );
     });
-    setModalVisible(true);
     setSelectedCell({ day, hour, lessons: cellLessons, date });
+    setModalVisible(true);
   };
 
   // Render the hours column.
   const renderHoursColumn = () => (
     <View style={styles.hoursColumn}>
-      {/* Spacer to match the height of the day header */}
-      <View style={{ height: 40 }} />
       {hours.map((hour) => (
         <View key={hour.toString()} style={styles.hourCell}>
           <Text style={styles.hourLabel}>{hour}:00</Text>
@@ -136,12 +130,7 @@ const CalendarScreen: React.FC = () => {
         lessonDate.getHours() === hour
       );
     });
-
-    // Determine cell background:
-    // - Gray if no lessons,
-    // - Green if at least one lesson is taught by the current instructor,
-    // - Dark blue if lessons exist but none are taught by the current instructor.
-    let bgColor = "#808080"; // gray for empty
+    let bgColor = "#808080"; // Gray if no lesson.
     if (cellLessons.length > 0) {
       if (
         cellLessons.some(
@@ -150,12 +139,11 @@ const CalendarScreen: React.FC = () => {
             lesson.instructorId === userInstructor.instructorId
         )
       ) {
-        bgColor = "#008000"; // green
+        bgColor = "#008000"; // Green if taught by current instructor.
       } else {
-        bgColor = "#00008B"; // dark blue
+        bgColor = "#00008B"; // Dark blue otherwise.
       }
     }
-
     return (
       <TouchableOpacity
         style={[styles.cell, { backgroundColor: bgColor }]}
@@ -171,30 +159,56 @@ const CalendarScreen: React.FC = () => {
 
   // Render a column for a given day.
   const renderDayColumn = (date: Date) => {
+    const isToday = date.toDateString() === new Date().toDateString();
     return (
-      <View style={styles.dayColumn} key={date.toDateString()}>
+      <View
+        style={[
+          styles.dayColumn,
+          isToday && { backgroundColor: "#bbdefb" } // highlight current day
+        ]}
+        key={date.toDateString()}
+      >
         <Text style={styles.dayHeader}>
           {date.toLocaleDateString("en-US", { weekday: "short" })}{"\n"}
           {date.getDate()}/{date.getMonth() + 1}
         </Text>
-        {hours.map((hour) => renderCell(date, hour))}
+        <View style={[styles.timeline, { height: timelineTotalHeight }]}>
+          {Array.from({ length: timelineEndHour - timelineStartHour }, (_, i) => {
+            const hour = timelineStartHour + i;
+            return renderCell(date, hour);
+          })}
+        </View>
       </View>
     );
   };
+
+  // Week Navigation Header: Two blue buttons: Previous Week and Next Week.
+  const renderWeekNavigation = () => (
+    <View style={styles.weekNavContainer}>
+      <TouchableOpacity
+        style={styles.navButton}
+        onPress={() => setCurrentWeekOffset(currentWeekOffset - 7)}
+      >
+        <Text style={styles.navButtonText}>Previous Week</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.navButton}
+        onPress={() => setCurrentWeekOffset(currentWeekOffset + 7)}
+      >
+        <Text style={styles.navButtonText}>Next Week</Text>
+      </TouchableOpacity>
+    </View>
+  );
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
       <View style={styles.container}>
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()}>
-            <Text style={styles.backArrow}>←</Text>
-          </TouchableOpacity>
-          <Text style={styles.headerTitle}>Calendar</Text>
-          <TouchableOpacity onPress={() => console.log("Profile icon tapped")}>
-            <Text style={styles.profileIcon}>🧑</Text>
-          </TouchableOpacity>
+        <View style={styles.simpleHeader}>
+          <Text style={styles.simpleHeaderText}>Calendar</Text>
         </View>
+        {/* Week Navigation */}
+        {renderWeekNavigation()}
 
         {/* Calendar Grid with Hours Column */}
         <ScrollView contentContainerStyle={styles.calendarContainer} horizontal>
@@ -203,34 +217,31 @@ const CalendarScreen: React.FC = () => {
         </ScrollView>
 
         {/* Modal for Lesson Details */}
-        <CustomModal 
-          visible={modalVisible} 
-          title={`Lessons for ${selectedCell?.day.toString()}, ${selectedCell?.hour.toString()}`}
-          onClose={() => {
-            setSelectedCell(null)
-            setModalVisible(false)
-          }}
-          >
-          {selectedCell && (
-            <SafeAreaView style={styles.modalContainer}>
-              <View style={styles.modalContent}>
-                <ScrollView style={styles.modalScroll}>
-                  {selectedCell.lessons.map((lesson) => (
-                    <View key={lesson.lessonId} style={styles.lessonItem}>
-                      <Text style={styles.lessonText}>
-                        {lesson.typeLesson} | {lesson.specialties.join(", ")}
-                      </Text>
-                      <Text style={styles.lessonTime}>
-                        {new Date(lesson.startAndEndTime.startTime).toLocaleTimeString()} -{" "}
-                        {new Date(lesson.startAndEndTime.endTime).toLocaleTimeString()}
-                      </Text>
-                    </View>
-                  ))}
-                </ScrollView>
-              </View>
-            </SafeAreaView>
-          )}
-        </CustomModal>
+        {modalVisible && selectedCell && (
+          <SafeAreaView style={styles.modalContainer}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>
+                Lessons for {selectedCell.day}, {selectedCell.hour}
+              </Text>
+              <ScrollView style={styles.modalScroll}>
+                {selectedCell.lessons.map((lesson) => (
+                  <View key={lesson.lessonId} style={styles.lessonItem}>
+                    <Text style={styles.lessonText}>
+                      {lesson.typeLesson} | {lesson.specialties.join(", ")}
+                    </Text>
+                    <Text style={styles.lessonTime}>
+                      {new Date(lesson.startAndEndTime.startTime).toLocaleTimeString()} -{" "}
+                      {new Date(lesson.startAndEndTime.endTime).toLocaleTimeString()}
+                    </Text>
+                  </View>
+                ))}
+              </ScrollView>
+              <Button mode="contained" onPress={() => setModalVisible(false)}>
+                Close
+              </Button>
+            </View>
+          </SafeAreaView>
+        )}
 
         <Button mode="outlined" onPress={() => navigation.goBack()} style={styles.backButton}>
           Back

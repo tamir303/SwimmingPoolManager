@@ -6,6 +6,8 @@ import React, {
   } from "react";
   import InstructorService from "../services/instructor.service";
   import Instructor from "../dto/instructor/instructor.dto";
+import Student from "../dto/student/student.dto";
+import StudentService from "../services/student.service";
   
   /**
    * Represents the user type in the system.
@@ -86,9 +88,15 @@ import React, {
             userType: "Instructor",
           });
         } else {
+          const studentId = phone;
+          const studentData: Student = await StudentService.loginStudent(
+            studentId,
+            password
+          );
+
           setUser({
-            id: phone,
-            name: "StudentName",
+            id: studentData.id,
+            name: studentData.name,
             userType: "Student",
           });
         }
@@ -126,15 +134,23 @@ import React, {
             password,
             newInstructor
         );
-          // Then store them as the current user
+
           setUser({
             id: phone,
             name,
             userType: "Instructor",
           });
+
         } else {
-          // If user is a student, call your student register endpoint
-          // For now, just store them in local state
+          const newStudent: Student = {
+            id: phone,
+            name,
+            preferences: []
+          };
+          const createdStudent: Student = await StudentService.createStudent(
+            password,
+            newStudent
+          );
           setUser({
             id: phone,
             name,

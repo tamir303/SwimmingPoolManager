@@ -9,7 +9,7 @@ type statusType = "Register" | "Login"
 type roleType = "Instructor" | "Student"
 
 const RegisterLoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
-    const { login, register } = useAuth();
+    const { login, register, isInstructor } = useAuth();
     const [status, setStatus] = useState<statusType>("Login");
     const [role, setRole] = useState<roleType>("Instructor");
     const [name, setName] = useState<string>("");
@@ -60,8 +60,8 @@ const RegisterLoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
                 navigation.navigate(`${role}SettingScreen`)
                 await register(name, phone, password, role)
               } else {
-                await login(phone, password, role)
-                navigation.navigate(`${role}MainScreen`)
+                await login(phone, password)
+                navigation.navigate(`${isInstructor ? "Student" : "Instructor"}MainScreen`)
               }
             } 
           }

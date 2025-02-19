@@ -1,21 +1,37 @@
-import { LessonType } from "../../utils/lesson-enum.utils.js";
+import { IStudent } from "../../model/student.model.js";
 import { Swimming } from "../../utils/swimming-enum.utils.js";
 
 /**
- * Class representing a student.
- * This class is used to define the details of a student, including their name, preferences, and lesson type.
+ * Student Class
+ *
+ * Represents a student enrolled in a swimming lesson, including their name and swimming preferences.
  */
 export default class Student {
   /**
-   * Creates an instance of Student.
+   * Constructor for Student.
+   * @param id - The unique identifier for the student.
    * @param name - The name of the student.
-   * @param preferences - An array of swimming preferences, represented by the `Swimming` enum
-   *                      (e.g., [Swimming.FREESTYLE, Swimming.BACKSTROKE]).
-   * @param phoneNumber - The phone number that the student has been registered with (e.g., 0502452651).
+   * @param preferences - The swimming preferences (e.g., [Swimming.CHEST, Swimming.BACK_STROKE]).
    */
   constructor(
+    public id: string,
     public name: string,
-    public preferences: Swimming[], // e.g., [Swimming.FREESTYLE, Swimming.BACKSTROKE]
-    public phoneNumber: string // e.g., 0502452651
+    public preferences: Swimming[],
+    public password: string
   ) {}
+
+  // Convert a Mongoose model document to a Student instance.
+  static fromModel(model: IStudent): Student {
+    return new Student(model._id, model.name, model.preferences, model.password);
+  }
+
+  // Convert a Student instance to an object suitable for saving in MongoDB.
+  static toModel(student: Student): any {
+    return {
+      _id: student.id,
+      name: student.name,
+      preferences: student.preferences,
+      password: student.password
+    };
+  }
 }

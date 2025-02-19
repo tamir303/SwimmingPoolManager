@@ -30,7 +30,7 @@ import StudentService from "../services/student.service";
    */
   interface AuthContextProps {
     user: AuthUser | null;
-    login: (phone: string, password: string, userType: UserType) => Promise<void>;
+    login: (phone: string, password: string) => Promise<void>;
     register: (
       name: string,
       phone: string,
@@ -72,42 +72,40 @@ import StudentService from "../services/student.service";
     const login = async (
       phone: string,
       password: string,
-      userType: UserType
     ): Promise<void> => {
+      var flag = true
       try {
-        if (userType === "Instructor") {
-          const instructorId = phone;
-          const instructorData: Instructor = await InstructorService.loginInstructor(
-            instructorId,
-            password
-          );
+        await StudentService.getStudentById(phone);
+      } catch (err) {
+        flag = false
+      }
 
-          setUser({
-            id: instructorData.id,
-            name: instructorData.name,
-            userType: "Instructor",
-          });
-        } else {
-          const studentId = phone;
-          const studentData: Student = await StudentService.loginStudent(
-            studentId,
-            password
-          );
-
+      try {
+        // Try to fetch a student by phone (assuming phone is used as the student ID)
+        if (flag) {
+          // Student exists: login as student.
+          const studentData: Student = await StudentService.loginStudent(phone, password);
           setUser({
             id: studentData.id,
             name: studentData.name,
             userType: "Student",
           });
+        } else {
+          // No student found: assume it's an instructor.
+          const instructorData: Instructor = await InstructorService.loginInstructor(phone, password);
+          setUser({
+            id: instructorData.id,
+            name: instructorData.name,
+            userType: "Instructor",
+          });
         }
-  
-        // 3. Store token in AsyncStorage, Redux, or keep in memory
-        //    e.g. await AsyncStorage.setItem("token", token);
+    
+        // Optionally: store token in AsyncStorage, Redux, or similar.
       } catch (err) {
         console.error("Login error:", err);
         throw err;
       }
-    };
+    };    
   
     /**
      * Example register function.

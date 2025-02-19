@@ -69,7 +69,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -109,7 +110,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -154,7 +156,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -198,7 +201,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -216,7 +220,8 @@ describe("LessonService", () => {
           {
             name: "John Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -263,8 +268,9 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
-          },
+            id: "0502452651",
+            password: "1234"
+          }
         ]
       );
 
@@ -281,7 +287,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -330,7 +337,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -348,7 +356,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -381,7 +390,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -434,7 +444,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -452,7 +463,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -510,7 +522,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -528,7 +541,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -562,7 +576,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -607,7 +622,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -625,7 +641,8 @@ describe("LessonService", () => {
           {
             name: "Jane Doe",
             preferences: [Swimming.BACK_STROKE],
-            phoneNumber: "0502452651",
+            id: "0502452651",
+            password: "1234"
           },
         ]
       );
@@ -662,7 +679,8 @@ describe("LessonService", () => {
             {
               name: "Jane Doe",
               preferences: [Swimming.BACK_STROKE],
-              phoneNumber: "0502452651",
+              id: "0502452651",
+            password: "1234"
             },
           ]
         ),

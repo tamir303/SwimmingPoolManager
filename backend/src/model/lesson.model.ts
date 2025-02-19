@@ -28,6 +28,7 @@ export interface ILesson extends Document {
  * Defines the structure and validation rules for student details.
  */
 const StudentSchema = new Schema<Student>({
+  id: { type: String, required: true },
   /** The name of the student. */
   name: { type: String, required: true },
   /** The swimming preferences of the student. */
@@ -36,11 +37,8 @@ const StudentSchema = new Schema<Student>({
     enum: Object.values(Swimming),
     required: true,
   },
+  password: { type: String, required: true }
   /** The phone number that the student has been registered with. */
-  phoneNumber: {
-    type: String,
-    required: true,
-  },
 });
 
 /**

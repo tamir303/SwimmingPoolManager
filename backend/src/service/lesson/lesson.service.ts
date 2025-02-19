@@ -476,7 +476,7 @@ export default class LessonService implements LessonServiceInterface {
     }
 
     const phoneNumbers = lessonData.students.map(
-      (student) => student.phoneNumber
+      (student) => student.id
     );
     const uniquePhoneNumbers = new Set(phoneNumbers);
 
@@ -500,8 +500,8 @@ export default class LessonService implements LessonServiceInterface {
       }
 
       if (
-        student.phoneNumber.length !== 10 ||
-        !/^\d+$/.test(student.phoneNumber)
+        student.id.length !== 10 ||
+        !/^\d+$/.test(student.id)
       ) {
         logger.warn(
           `The student ${student.name} has illegal phone number that must be 10 digits long and must contain only numbers`
@@ -602,7 +602,7 @@ export default class LessonService implements LessonServiceInterface {
         const hasDuplicatePhoneNumber = targetStudentArr.some((targetStudent) =>
           existingLesson.students.some(
             (existingStudent) =>
-              existingStudent.phoneNumber === targetStudent.phoneNumber
+              existingStudent.id === targetStudent.id
           )
         );
 

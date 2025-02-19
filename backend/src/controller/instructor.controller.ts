@@ -36,7 +36,6 @@ export default class InstructorController {
     logger.info("Received request to create a new instructor.");
     try {
       const instructorData: Instructor = req.body.newInstructor;
-      instructorData.availabilities = new Array(7).fill(-1)
       const password: string = req.body.password;
       logger.info("Validating and creating a new instructor...");
       const newInstructor: Instructor =

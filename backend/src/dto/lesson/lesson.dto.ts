@@ -45,7 +45,7 @@ export default class Lesson {
       ),
       lessonDoc.students.map(
         (student) =>
-          new Student(student.name, student.preferences, student.phoneNumber)
+          new Student(student.id, student.name, student.preferences, student.password)
       )
     );
   }
@@ -67,7 +67,8 @@ export default class Lesson {
       students: lesson.students.map((student) => ({
         name: student.name,
         preferences: student.preferences,
-        phoneNumber: student.phoneNumber,
+        id: student.id,
+        password: student.password
       })),
     };
 

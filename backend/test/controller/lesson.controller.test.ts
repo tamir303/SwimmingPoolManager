@@ -36,7 +36,8 @@ let newLesson: NewLesson = new NewLesson(
     {
       name: "Jane Doe",
       preferences: ["BACK_STROKE"],
-      phoneNumber: "0502452651",
+      id: "0502452651",
+      password: "1234"
     } as Student,
   ]
 );
@@ -183,7 +184,8 @@ describe("Lesson Controller Integration Tests", () => {
         {
           name: "John Smith",
           preferences: ["BACK_STROKE"] as Swimming[],
-          phoneNumber: "0502452743",
+          id: "0502452743",
+          password: "1234"
         },
       ]
     );

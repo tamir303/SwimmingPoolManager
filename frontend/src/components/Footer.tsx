@@ -14,19 +14,19 @@ const Footer: React.FC<FooterProps> = ({ navigation }) => {
       <View style={styles.footer}>
         <TouchableOpacity 
           style={styles.footerButton} 
-          onPress={() => navigation.navigate(true ? `InstructorMainScreen` : `StudentMainScreen`)}
+          onPress={() => navigation.navigate(isInstructor ? `InstructorMainScreen` : `StudentMainScreen`)}
         >
           <Text style={styles.footerButtonText}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.footerButton} 
-          onPress={() => navigation.navigate(true ? "InstructorCalendarScreen" : "StudentCalendarScreen")}
+          onPress={() => navigation.navigate(isInstructor ? "InstructorCalendarScreen" : "StudentCalendarScreen")}
         >
           <Text style={styles.footerButtonText}>Calendar</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.footerButton} 
-          onPress={() => navigation.navigate(true ? "InstructorSettingScreen" : "StudentSettingScreen")}
+          onPress={() => navigation.navigate(isInstructor ? "InstructorSettingScreen" : "StudentSettingScreen")}
         >
           <Text style={styles.footerButtonText}>Settings</Text>
         </TouchableOpacity>

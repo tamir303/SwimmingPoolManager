@@ -1,6 +1,7 @@
 import { Express } from "express";
 import lessonRouter from "../route/lesson.route.js";
 import instructorRouter from "../route/instructor.route.js";
+import studentRouter from "../route/student.routes.js";
 
 /**
  * Mounts application routes to the Express application instance.
@@ -20,4 +21,6 @@ export function mountRoutes(app: Express): void {
    * All routes in `instructorRouter` will be prefixed with `/instructor`.
    */
   app.use("/instructor", instructorRouter);
+
+  app.use("/student", studentRouter)
 }

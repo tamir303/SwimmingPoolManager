@@ -1,5 +1,15 @@
 import { Request, Response, NextFunction } from "express";
 import { Availability } from "../../dto/instructor/start-and-end-time.dto.js";
+import { createCustomLogger } from "../../etc/logger.etc.js";
+import path from "path";
+
+// Initialize logger
+const logger = createCustomLogger({
+  moduleFilename: path.parse(new URL(import.meta.url).pathname).name,
+  logToFile: true,
+  logLevel: process.env.INFO_LOG || "info",
+  logRotation: true,
+});
 
 /**
  * Middleware to deserialize `availabilities` in the request body.
@@ -18,8 +28,8 @@ const deserializeAvailabilities = (
   const body = req.body;
 
   // Check if the body contains `availabilities`
-  if (body && Array.isArray(body.availabilities)) {
-    body.availabilities = body.availabilities.map(
+  if (body && Array.isArray(body.newInstructor.availabilities)) {
+    body.newInstructor.availabilities = body.newInstructor.availabilities.map(
       (availability: Availability) => {
         if (typeof availability === "object" && availability !== null) {
           // Convert `startTime` and `endTime` to `Date` objects

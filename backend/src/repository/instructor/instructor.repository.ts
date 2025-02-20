@@ -29,6 +29,7 @@ export default class InstructorRepository
     logger.info("Creating a new instructor...");
     try {
       instructorData.password = password
+      instructorData.availabilities = new Array(7).fill(-1)
       const newInstructor = new InstructorModel(
         Instructor.toModel(instructorData)
       );

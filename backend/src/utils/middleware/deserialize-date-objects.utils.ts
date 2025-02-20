@@ -28,7 +28,7 @@ const deserializeAvailabilities = (
   const body = req.body;
 
   // Check if the body contains `availabilities`
-  if (body && Array.isArray(body.newInstructor.availabilities)) {
+  if (body && body.newInstructor && Array.isArray(body.newInstructor.availabilities)) {
     body.newInstructor.availabilities = body.newInstructor.availabilities.map(
       (availability: Availability) => {
         if (typeof availability === "object" && availability !== null) {

@@ -4,10 +4,10 @@ import { View, Text, TextInput, StyleSheet } from 'react-native';
 interface InputFieldProps {
     placeholder: string;
     icon: string;
-    onChange: any;
-  }
+    onChange: (text: string) => void;
+    secureTextEntry?: boolean;  }
 
-const InputField: React.FC<InputFieldProps> = ({ placeholder, icon, onChange }) => (
+const InputField: React.FC<InputFieldProps> = ({ placeholder, icon, onChange, secureTextEntry }) => (
     <View style={styles.inputContainer}>
       <Text style={styles.icon}>{icon}</Text>
       <TextInput
@@ -15,6 +15,7 @@ const InputField: React.FC<InputFieldProps> = ({ placeholder, icon, onChange }) 
         style={styles.input}
         placeholderTextColor="#999"
         onChangeText={onChange}
+        secureTextEntry={secureTextEntry}
       />
     </View>
 );

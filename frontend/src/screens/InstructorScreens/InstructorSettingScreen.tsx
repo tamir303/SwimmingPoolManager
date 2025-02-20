@@ -130,17 +130,18 @@ const InstructorScreen: React.FC = () => {
       return;
     }
     try {
-      // Commit temporary changes to global state.
-      setSpecialties(tempSpecialties);
-      setAvailableDays(tempAvailableDays);
-
       if (userInstructor && userInstructor.id) {
         await updateInstructor({
           id: userInstructor.id,
-          data: { specialties: tempSpecialties, availabilities: tempAvailabilities },
+          data: { name: name, specialties: tempSpecialties, availabilities: tempAvailabilities },
         });
       }
+
+      // Commit temporary changes to global state.
+      setSpecialties(tempSpecialties);
+      setAvailableDays(tempAvailableDays);
       console.log("Saved instructor data!");
+      
       setTempSelectedDay(null);
     } catch (err) {
       console.error("Error saving data:", err);

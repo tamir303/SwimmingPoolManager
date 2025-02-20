@@ -8,6 +8,7 @@ import InstructorServiceInterface from "./IInstructor.service.js";
 import { createCustomLogger } from "../../etc/logger.etc.js";
 import LessonRepositoryInterface from "../../repository/lesson/ILesson.repository.js";
 import LessonRepository from "../../repository/lesson/lesson.repository.js";
+import { Availability } from "../../dto/instructor/start-and-end-time.dto.js";
 
 // Initialize the logger
 const logger = createCustomLogger({

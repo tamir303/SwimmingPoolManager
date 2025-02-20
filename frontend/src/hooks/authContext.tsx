@@ -134,8 +134,8 @@ import StudentService from "../services/student.service";
         );
 
           setUser({
-            id: phone,
-            name,
+            id: createdInstructor.id,
+            name: createdInstructor.name,
             userType: "Instructor",
           });
 
@@ -150,8 +150,8 @@ import StudentService from "../services/student.service";
             newStudent
           );
           setUser({
-            id: phone,
-            name,
+            id: createdStudent.id,
+            name: createdStudent.name,
             userType: "Student",
           });
         }

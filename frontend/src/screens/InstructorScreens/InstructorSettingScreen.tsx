@@ -15,7 +15,7 @@ import { useInstructors } from "../../hooks/instructorHooks/useInstructors";
 import { useInstructorForm } from "../../hooks/instructorHooks/useInstructorForm";
 import { sortDays } from "../../utils/sortHelpers";
 import { isInstructorValid } from "../../utils/validation";
-import StartAndEndTime from "../../dto/instructor/start-and-end-time.dto";
+import StartAndEndTime, { Availability } from "../../dto/instructor/start-and-end-time.dto";
 import { useNavigation } from "@react-navigation/native";
 import styles from "./styles/InstructorScreen.styles";
 import { useAuth } from "../../hooks/authContext";
@@ -34,7 +34,7 @@ const InstructorScreen: React.FC = () => {
   const { user } = useAuth();
   const { showAlert } = useAlert()
   const navigation = useNavigation();
-  const { updateInstructor, addInstructor } = useInstructors();
+  const { updateInstructor } = useInstructors();
 
   // Global (saved) instructor data.
   const [userInstructor, setUserInstructor] = useState<Instructor | null>(null);
@@ -53,7 +53,7 @@ const InstructorScreen: React.FC = () => {
 
   // Temporary state for unsaved changes.
   const [tempSpecialties, setTempSpecialties] = useState<Swimming[]>([]);
-  const [tempAvailabilities, setTempAvailabilities] = useState<any[]>(new Array(7).fill(-1));
+  const [tempAvailabilities, setTempAvailabilities] = useState<Availability[]>(new Array(7).fill(-1));
   const [tempAvailableDays, setTempAvailableDays] = useState<DaysOfWeek[]>(Object.values(DaysOfWeek));
   const [tempSelectedDay, setTempSelectedDay] = useState<DaysOfWeek | null>(null);
   const [tempAvailableSpecialties, setTempAvailableSpecialties] = useState<Swimming[]>([]);
@@ -111,6 +111,18 @@ const InstructorScreen: React.FC = () => {
     );
   }, [tempSpecialties]);
 
+  useEffect(() => {
+    // Compute all days that are cancelled (i.e. availability equals -1)
+    const cancelledDays = Object.values(DaysOfWeek).filter((day, idx) => {
+      return tempAvailabilities[idx] === -1;
+    });
+    // Only update if there's a change to avoid unnecessary re-renders.
+    if (cancelledDays.length !== tempAvailableDays.length) {
+      setTempAvailableDays(cancelledDays);
+    }
+  }, [tempAvailabilities]);
+  
+
   const checkIfValid = (): boolean => {
     const { valid, message } = isInstructorValid(name, tempSpecialties, tempAvailableDays);
     if (message) showAlert(message)
@@ -140,6 +152,7 @@ const InstructorScreen: React.FC = () => {
       // Commit temporary changes to global state.
       setSpecialties(tempSpecialties);
       setAvailableDays(tempAvailableDays);
+      setAvailabilities(tempAvailabilities)
       console.log("Saved instructor data!");
       
       setTempSelectedDay(null);
@@ -272,13 +285,21 @@ const InstructorScreen: React.FC = () => {
             const dayIndex = Object.values(DaysOfWeek).indexOf(day)
             return (
               <View key={day} style={styles.timePickerSection}>
+                {/* X icon to disable this day */}
+                <TouchableOpacity 
+                  style={styles.removeIcon} 
+                  onPress={() => handleToggleDay(day)}
+                >
+                  <Text style={styles.removeIconText}>X</Text>
+                </TouchableOpacity>
+
                 <Text style={styles.sectionTitle}>Set Time for {day}</Text>
                 <View style={styles.timePickerRow}>
                   <View style={styles.timePickerItem}>
                   <Text style={styles.timePickersLabel}>Available From</Text>
                   <TimePicker
                     label="From"
-                    value={tempAvailabilities[dayIndex]?.startTime || new Date()}
+                    value={typeof tempAvailabilities[dayIndex] === "object" && tempAvailabilities[dayIndex]?.startTime || new Date()}
                     onTimeSelected={(time) =>
                       handleUpdateDayRange(day, time, undefined)
                     }
@@ -288,7 +309,7 @@ const InstructorScreen: React.FC = () => {
                       <Text style={styles.timePickersLabel}>Available Until</Text>
                       <TimePicker
                       label="Until"
-                      value={tempAvailabilities[dayIndex]?.endTime || new Date()}
+                      value={typeof tempAvailabilities[dayIndex] === "object" && tempAvailabilities[dayIndex]?.endTime || new Date()}
                       onTimeSelected={(time) =>
                         handleUpdateDayRange(day, undefined, time)
                       }

@@ -34,8 +34,12 @@ const TimePicker: React.FC<TimePickerProps> = ({ label, value, onTimeSelected })
   };
 
   // For web, we convert the selectedTime to a time string in "HH:MM" format
-  const toTimeString = (date: Date) => {
-    return date.toISOString().substr(11, 5);
+  const formatTime = (date: Date): string => {
+    const fdate = new Date(date);
+    // Format date to HH:MM (24-hour format)
+    const hours = fdate.getHours().toString().padStart(2, "0");
+    const minutes = fdate.getMinutes().toString().padStart(2, "0");
+    return `${hours}:${minutes}`;
   };
 
   const handleWebTimeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -53,7 +57,7 @@ const TimePicker: React.FC<TimePickerProps> = ({ label, value, onTimeSelected })
         // Use a native HTML time input for web
         <input
           type="time"
-          value={toTimeString(selectedTime)}
+          value={formatTime(selectedTime)}
           onChange={handleWebTimeChange}
           style={{ padding: 10, fontSize: 16 }}
         />

@@ -9,7 +9,6 @@ import {
 } from "react-native";
 import { useIsFocused, useNavigation } from "@react-navigation/native";
 import { Button, RadioButton } from "react-native-paper";
-import LessonService from "../../services/lesson.service";
 import Lesson from "../../dto/lesson/lesson.dto";
 import CustomModal from "../../components/Modal";
 import CustomCard from "../../components/Card";
@@ -22,7 +21,9 @@ import Footer from "../../components/Footer";
 import styles from "./styles/MainScreen.styles";
 import Instructor from "../../dto/instructor/instructor.dto";
 import InstructorService from "../../services/instructor.service";
-import { DaysOfWeek } from "../../utils/days-week-enum.utils";
+import { DaysOfWeek, getDayIndexInMonth } from "../../utils/days-week-enum.utils";
+import useAlert from "../../hooks/useAlert";
+import useLesson from "../../hooks/LessonHooks/useLessons";
 
 type LessonTab = "MY" | "COMPLETED";
 const days: DaysOfWeek[] = Object.values(require("../../utils/days-week-enum.utils").DaysOfWeek);
@@ -35,6 +36,9 @@ const formatSpecialty = (specialty: string): string => {
 
 const MainScreen: React.FC = () => {
   const { user } = useAuth();
+  const { showAlert } = useAlert();
+  const { createLesson, updateLesson, getLessonsWithinRange, deleteLessonById, getLessonById ,error } = useLesson();
+
   const navigation = useNavigation();
   const isFocused = useIsFocused();
 
@@ -48,11 +52,10 @@ const MainScreen: React.FC = () => {
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
 
   // Fields for lesson creation/editing
-  const [lessonTitle, setLessonTitle] = useState("");
   const [lessonType, setLessonType] = useState<LessonType | null>(null);
   const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null);
   const [lessonEndTime, setLessonEndTime] = useState<Date | null>(null);
-  const [selectedLessonDay, setSelectedLessonDay] = useState<string>("");
+  const [selectedLessonDay, setSelectedLessonDay] = useState<DaysOfWeek | null>(null);
 
   const [userInstructor, setUserInstructor] = useState<Instructor | null>(null);
 
@@ -78,7 +81,7 @@ const MainScreen: React.FC = () => {
       start.setDate(start.getDate() - 30);
       const end = new Date();
       end.setDate(end.getDate() + 30);
-      const lessons = await LessonService.getLessonsWithinRange(start, end);
+      const lessons = await getLessonsWithinRange(start, end);
       // Only show lessons created by the logged-in instructor
       const myLessons = lessons.filter(
         (lesson) => lesson.instructorId === user?.id
@@ -86,6 +89,7 @@ const MainScreen: React.FC = () => {
       setAllLessons(myLessons);
     } catch (error) {
       console.error("Error fetching lessons:", error);
+      showAlert("Failed to fetch lessons")
     }
   };
 
@@ -106,64 +110,90 @@ const MainScreen: React.FC = () => {
   // Open modal for creating a new lesson
   const openCreateModal = () => {
     setSelectedLesson(null);
-    setLessonTitle("");
-    setLessonStartTime(null);
-    setLessonEndTime(null);
+    setLessonType(null);
+    setLessonStartTime(new Date());
+    setLessonEndTime(new Date());
     setModalVisible(true);
   };
 
   // Open modal for editing an existing lesson
   const openEditModal = (lesson: Lesson) => {
     setSelectedLesson(lesson);
-    setLessonTitle(lesson.typeLesson);
-    if (lesson.startAndEndTime) {
-      setLessonStartTime(new Date(lesson.startAndEndTime.startTime));
-      setLessonEndTime(new Date(lesson.startAndEndTime.endTime));
-    }
+    setLessonType(lesson.typeLesson);
+    setLessonStartTime(lesson.startAndEndTime.startTime);
+    setLessonEndTime(lesson.startAndEndTime.endTime);
     setModalVisible(true);
   };
 
+  const adjustTime = (date: Date): Date => {
+    const newDate = new Date(date);
+    newDate.setSeconds(0);
+    newDate.setMilliseconds(0);
+    return newDate;
+  };
+
   const handleSaveLesson = async () => {
-    if (!lessonTitle || !lessonStartTime || !lessonEndTime) {
-      console.log("Please fill all fields");
+    console.log(`${lessonType} ${selectedLessonDay} ${lessonStartTime} ${lessonEndTime}`)
+
+    if (!lessonType || !lessonStartTime || !lessonEndTime || !userInstructor || !selectedLessonDay) {
+      showAlert("One or more lessons fields are empty!")
       return;
     }
 
+    const day: number = getDayIndexInMonth(Object.values(DaysOfWeek).indexOf(selectedLessonDay))
+    const adjustStartTime: Date = adjustTime(lessonStartTime)
+    const adjustEndTime: Date = adjustTime(lessonEndTime)
+    adjustStartTime.setDate(day)
+    adjustEndTime.setDate(day)
+
     try {
       if (selectedLesson) {
-        await LessonService.updateLesson(selectedLesson.lessonId || "", {
+        await updateLesson(selectedLesson.lessonId || "", {
           ...selectedLesson,
-          typeLesson: lessonTitle as LessonType,
-          startAndEndTime: new StartAndEndTime(lessonStartTime, lessonEndTime),
+          typeLesson: lessonType,
+          startAndEndTime: new StartAndEndTime(adjustStartTime, adjustEndTime),
         });
+        showAlert("Lesson Updated!")
       } else {
-        const day = lessonStartTime.getDay();
+        const day = Object.values(DaysOfWeek).indexOf(selectedLessonDay);
         const newLesson = new NewLesson(
-          LessonType.PRIVATE,
-          user?.id || "undefined",
-          [],
-          new StartAndEndTime(lessonStartTime, lessonEndTime),
+          lessonType,
+          userInstructor.id,
+          userInstructor.specialties,
+          new StartAndEndTime(adjustStartTime, adjustEndTime),
           []
         );
-        await LessonService.createLesson(newLesson, day);
+        await createLesson(newLesson, day);
+        showAlert("Lesson Created!")
       }
       fetchLessons();
       setModalVisible(false);
     } catch (err) {
       console.error("Error saving lesson:", err);
+      showAlert("Failed to save lesson!")
     }
   };
 
   const renderLesson = ({ item }: { item: Lesson }) => {
+    // Determine status and set a color accordingly.
     const status = item.students.length > 0 ? "Active" : "Completed";
+    const statusColor = status === "Active" ? "#4CAF50" : "#F44336";
+    // Format start and end times.
+    const startTime = new Date(item.startAndEndTime.startTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const endTime = new Date(item.startAndEndTime.endTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    
     return (
-      <CustomCard
-        title={`${item.typeLesson} Lesson`}
-        description={`Specialties: ${item.specialties.join(", ")}`}
-        onPress={() => openEditModal(item)}
-        style={styles.card}
-      >
-        <Text style={styles.lessonStatus}>Status: {status}</Text>
+      <CustomCard onPress={() => openEditModal(item)} style={styles.card} title={`${userInstructor}-${startTime}-${endTime}`}>
+        <Text style={styles.cardText}>
+          Instructor: {item.instructorId}
+        </Text>
+        <Text style={styles.cardText}>Type: {item.typeLesson}</Text>
+        <Text style={styles.cardText}>
+          Specialties: {item.specialties.map(formatSpecialty).join(", ")}
+        </Text>
+        <Text style={[styles.lessonStatus, { color: statusColor }]}>
+          {status} | {startTime} - {endTime}
+        </Text>
       </CustomCard>
     );
   };
@@ -171,11 +201,41 @@ const MainScreen: React.FC = () => {
   // Header component showing user info
   const HeaderUserInfo = () => (
     <View style={styles.headerUserInfo}>
-      <Text style={styles.userName}>{user?.name || "undefined"} - {user?.id || "undefined"}</Text>
-      <Text style={styles.userDetails}>
-        {`Swimming: ${userInstructor?.specialties || "undefined"}\n`}
-        {`Availability: ${userInstructor?.availabilities || "undefined"}`}
-      </Text>
+          {userInstructor ? (
+            <View>
+              <Text style={styles.userName}>
+                Name: {userInstructor.name}
+              </Text>
+              {
+                userInstructor.availabilities.every((availability) => availability === -1) ? (
+                  <Text style={styles.emptyText}>No Availabilities Set Yet!</Text>
+                ) : (
+                  userInstructor.availabilities.map((availability, idx) => {
+                    if (availability === -1) return null;
+                    const day = Object.values(DaysOfWeek)[idx];
+                    return (
+                      <Text key={day}>
+                        {day}: {new Date(availability.startTime).toLocaleTimeString()} -{" "}
+                        {new Date(availability.endTime).toLocaleTimeString()}
+                      </Text>
+                    );
+                  })
+                )
+              }
+              {userInstructor.specialties.length > 0 ? (
+                <Text>
+                    Specialties:{" "}
+                  {userInstructor.specialties.map(formatSpecialty).join(", ")}
+                </Text>
+              ) : (
+                <Text style={styles.emptyText}>
+                  No Specialities Set Yet!
+                </Text>
+              )}
+            </View>
+          ) : (
+            <Text style={styles.emptyText}>Loading current settings...</Text>
+          )}
     </View>
   );
 
@@ -254,9 +314,7 @@ const MainScreen: React.FC = () => {
         data={filteredLessons}
         keyExtractor={(item) => item.lessonId || Math.random().toString()}
         renderItem={renderLesson}
-        ListEmptyComponent={
-          <Text style={styles.emptyText}>No lessons found.</Text>
-        }
+        ListEmptyComponent={<Text style={styles.emptyText}>No lessons found.</Text>}
         contentContainerStyle={styles.listContainer}
       />
 

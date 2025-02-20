@@ -86,10 +86,9 @@ const LessonSchema = new Schema<ILesson>(
       validate: {
         validator: (students: Student[]) =>
           Array.isArray(students) &&
-          students.length > 0 &&
           students.length <= 30,
         message:
-          "Students must be a non-empty array and must not exceed 30 in size.",
+          "Students must not exceed 30 in size.",
       },
       required: true,
     },

@@ -61,12 +61,6 @@ export default StyleSheet.create({
     shadowRadius: 4,
     elevation: 3,
   },
-  currentSettingsText: {
-    fontSize: 16,
-    color: "#444",
-    marginBottom: 8,
-    lineHeight: 22,
-  },
   // Availability Days Grid (two columns)
   daysGrid: {
     flexDirection: "row",
@@ -183,5 +177,29 @@ export default StyleSheet.create({
   timePickerItem: {
     flex: 1,
     marginHorizontal: 5,
+  },
+  currentSettingsText: {
+    fontSize: 18,      // Increased font size for better readability
+    color: "#222",
+    marginBottom: 8,
+    fontWeight: "500",
+  },
+  // New style for the "X" remove icon on active day sections.
+  removeIcon: {
+    position: "absolute",
+    top: 5,
+    right: 5,
+    zIndex: 10,
+    backgroundColor: "#ff6666",
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removeIconText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 16,
   },
 });

@@ -3,7 +3,6 @@ import { Availability } from "../../dto/instructor/start-and-end-time.dto.js";
 import { createCustomLogger } from "../../etc/logger.etc.js";
 import path from "path";
 
-// Initialize logger
 const logger = createCustomLogger({
   moduleFilename: path.parse(new URL(import.meta.url).pathname).name,
   logToFile: true,
@@ -11,15 +10,6 @@ const logger = createCustomLogger({
   logRotation: true,
 });
 
-/**
- * Middleware to deserialize `availabilities` in the request body.
- * Converts `startTime` and `endTime` fields in each availability entry to `Date` objects
- * for proper handling within the application.
- *
- * @param req - The Express request object.
- * @param res - The Express response object.
- * @param next - The next middleware function in the chain.
- */
 const deserializeAvailabilities = (
   req: Request,
   res: Response,
@@ -27,24 +17,39 @@ const deserializeAvailabilities = (
 ) => {
   const body = req.body;
 
-  // Check if the body contains `availabilities`
-  if (body && body.newInstructor && Array.isArray(body.newInstructor.availabilities)) {
-    body.newInstructor.availabilities = body.newInstructor.availabilities.map(
-      (availability: Availability) => {
+  if (body) {
+    // If availabilities exist under newInstructor, process them.
+    if (body.newInstructor && Array.isArray(body.newInstructor.availabilities)) {
+      logger.info("Deserializing availabilities from newInstructor");
+      body.newInstructor.availabilities = body.newInstructor.availabilities.map(
+        (availability: Availability) => {
+          if (typeof availability === "object" && availability !== null) {
+            return {
+              ...availability,
+              startTime: new Date(availability.startTime),
+              endTime: new Date(availability.endTime),
+            };
+          }
+          return availability;
+        }
+      );
+    }
+    // Otherwise, if availabilities exist at the root of the body, process those.
+    else if (Array.isArray(body.availabilities)) {
+      logger.info("Deserializing availabilities from root body");
+      body.availabilities = body.availabilities.map((availability: Availability) => {
         if (typeof availability === "object" && availability !== null) {
-          // Convert `startTime` and `endTime` to `Date` objects
           return {
             ...availability,
             startTime: new Date(availability.startTime),
             endTime: new Date(availability.endTime),
           };
         }
-        return availability; // Preserve non-object entries like -1
-      }
-    );
+        return availability;
+      });
+    }
   }
-
-  next(); // Proceed to the next middleware or route handler
+  next();
 };
 
 export default deserializeAvailabilities;

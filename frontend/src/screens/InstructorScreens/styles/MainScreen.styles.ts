@@ -1,13 +1,6 @@
 import { StyleSheet } from "react-native";
 
 export default StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8F9FA",
-    paddingHorizontal: 20,
-    paddingTop: 40,
-    paddingBottom: 60,
-  },
   headerUserInfo: {
     marginBottom: 10,
   },
@@ -47,28 +40,6 @@ export default StyleSheet.create({
   activeToggleButtonText: {
     color: "#FFF",
     fontWeight: "bold",
-  },
-  listContainer: {
-    paddingBottom: 20,
-  },
-  card: {
-    marginBottom: 15,
-    backgroundColor: "#4C63D2",
-  },
-  lessonStatus: {
-    color: "#FFF",
-    marginTop: 10,
-    fontSize: 14,
-  },
-  emptyText: {
-    textAlign: "center",
-    color: "#999",
-    fontSize: 16,
-    marginTop: 20,
-  },
-  createButtonContainer: {
-    alignItems: "center",
-    marginVertical: 20,
   },
   createButton: {
     backgroundColor: "#4CAF50",
@@ -121,5 +92,53 @@ export default StyleSheet.create({
   },
   dayPickerTextActive: {
     color: "#fff",
+  },
+  container: {
+    flex: 1,
+    backgroundColor: "#F8F9FA",
+    paddingHorizontal: 20,
+    paddingTop: 40,
+    paddingBottom: 60,
+  },
+  headerTitle: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#333",
+    marginBottom: 20,
+    textAlign: "center",
+  },
+  listContainer: {
+    paddingBottom: 20,
+  },
+  card: {
+    marginBottom: 15,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 15,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  lessonStatus: {
+    marginTop: 10,
+    fontSize: 14,
+    fontWeight: "bold",
+  },
+  emptyText: {
+    textAlign: "center",
+    color: "#999",
+    fontSize: 16,
+    marginTop: 20,
+  },
+  createButtonContainer: {
+    alignItems: "center",
+    marginVertical: 20,
+  },
+  cardText: {
+    fontSize: 16,
+    color: "#333",
+    marginBottom: 4,
   },
 });

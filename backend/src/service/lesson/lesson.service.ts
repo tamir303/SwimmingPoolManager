@@ -474,14 +474,14 @@ export default class LessonService implements LessonServiceInterface {
       );
     }
 
-    if (lessonData.students.length === 0 || lessonData.students.length > 30) {
+    if (lessonData.students.length > 30) {
       throw new createHttpError.BadRequest(
         "The number of students taking the lesson must be between 1 to 30."
       );
     }
 
     if (
-      lessonData.students.length !== 1 &&
+      lessonData.students.length === 1 &&
       lessonData.typeLesson === LessonType.PRIVATE
     ) {
       throw new createHttpError.BadRequest(
@@ -549,7 +549,7 @@ export default class LessonService implements LessonServiceInterface {
       // Check if the time ranges overlap using compareTime
       const startComparison = compareTime(targetStart, existingEnd);
       const endComparison = compareTime(targetEnd, existingStart);
-
+      
       const isOverlapping = startComparison < 0 && endComparison > 0;
 
       if (isOverlapping) {

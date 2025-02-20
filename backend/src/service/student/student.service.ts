@@ -1,3 +1,4 @@
+import createHttpError from "http-errors";
 import Student from "../../dto/student/student.dto.js";
 import StudentRepositoryInterface from "../../repository/student/IStudent.repository.js";
 import StudentRepository from "../../repository/student/student.repository.js";
@@ -33,9 +34,13 @@ export default class StudentService implements StudentServiceInterface {
 
   async getStudentById(studentId: string): Promise<Student> {
     const student = await this.studentRepository.findById(studentId);
+
     if (!student) {
-      throw new Error(`Student with ID ${studentId} not found`);
+      throw new createHttpError.NotFound(
+        `Student with ID ${studentId} not found`
+      );
     }
+
     return student;
   }
 

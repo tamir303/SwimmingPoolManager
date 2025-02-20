@@ -38,7 +38,7 @@ export default class Lesson {
       lessonDoc._id?.toString() || null, // Convert `_id` to string or keep it null.
       lessonDoc.typeLesson,
       lessonDoc.specialties,
-      lessonDoc.instructorId.toString(),
+      lessonDoc.instructorId,
       new StartAndEndTime(
         lessonDoc.startAndEndTime.startTime,
         lessonDoc.startAndEndTime.endTime
@@ -59,7 +59,7 @@ export default class Lesson {
     const modelData: Partial<ILesson> = {
       typeLesson: lesson.typeLesson,
       specialties: lesson.specialties,
-      instructorId: new mongoose.Types.ObjectId(lesson.instructorId),
+      instructorId: lesson.instructorId,
       startAndEndTime: {
         startTime: lesson.startAndEndTime.startTime,
         endTime: lesson.startAndEndTime.endTime,

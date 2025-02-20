@@ -15,6 +15,8 @@ import LessonServiceInterface from "./ILesson.service.js";
 import compareTime from "../../utils/compare-hours.utils.js";
 import { createCustomLogger } from "../../etc/logger.etc.js";
 import Student from "../../dto/student/student.dto.js";
+import StudentService from "../student/student.service.js";
+import StudentServiceInterface from "../student/IStudent.service.js";
 
 // Initialize logger
 const logger = createCustomLogger({
@@ -32,10 +34,12 @@ const logger = createCustomLogger({
 export default class LessonService implements LessonServiceInterface {
   private lessonRepository: LessonRepositoryInterface;
   private instructorService: InstructorServiceInterface;
+  private studentService: StudentServiceInterface;
 
   constructor() {
     this.lessonRepository = new LessonRepository();
     this.instructorService = new InstructorService();
+    this.studentService = new StudentService();
   }
 
   /**
@@ -60,10 +64,16 @@ export default class LessonService implements LessonServiceInterface {
 
     this.validateLessonData(lessonData);
 
-    logger.info("Fetching instructor data for the lesson.");
+    logger.info("Fetching instructor and students data for the lesson.");
     const instructorData: Instructor =
       await this.instructorService.getInstructorById(lessonData.instructorId); // must be valid otherwise it will throw an exception
 
+      await Promise.all(
+        lessonData.students.map((student) =>
+          this.studentService.getStudentById(student.id)
+        )
+      ); 
+     
     if (
       !lessonData.specialties.every((specialty) =>
         instructorData.specialties.includes(specialty)
@@ -260,6 +270,10 @@ export default class LessonService implements LessonServiceInterface {
 
     const instructorData: Instructor =
       await this.instructorService.getInstructorById(lessonData.instructorId); // must be valid otherwise it will throw an exception
+
+    lessonData.students.map(async (student) => 
+      await this.studentService.getStudentById(student.id) // must be valid otherwise it will throw an exception
+    )
 
     if (
       !lessonData.specialties.every((specialty) =>
@@ -496,18 +510,6 @@ export default class LessonService implements LessonServiceInterface {
       if (student.preferences.length === 0) {
         throw new createHttpError.BadRequest(
           "Every student's preferences must be at least one of the specialties that are being taught in the lesson."
-        );
-      }
-
-      if (
-        student.id.length !== 10 ||
-        !/^\d+$/.test(student.id)
-      ) {
-        logger.warn(
-          `The student ${student.name} has illegal phone number that must be 10 digits long and must contain only numbers`
-        );
-        throw new createHttpError.BadRequest(
-          `The student ${student.name} has illegal phone number that must be 10 digits long`
         );
       }
 

@@ -16,7 +16,7 @@ export interface ILesson extends Document {
   /** An array of swimming specialties included in the lesson. */
   specialties: Swimming[];
   /** The ID of the instructor assigned to the lesson. */
-  instructorId: mongoose.Types.ObjectId;
+  instructorId: string;
   /** The start and end time of the lesson. */
   startAndEndTime: StartAndEndTime;
   /** An array of students attending the lesson. */
@@ -72,8 +72,7 @@ const LessonSchema = new Schema<ILesson>(
     },
     /** Reference to the instructor assigned to the lesson. */
     instructorId: {
-      type: Schema.Types.ObjectId,
-      ref: "Instructor",
+      type: String,
       required: true,
     },
     /** The start and end time of the lesson. */

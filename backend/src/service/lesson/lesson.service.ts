@@ -17,6 +17,7 @@ import { createCustomLogger } from "../../etc/logger.etc.js";
 import Student from "../../dto/student/student.dto.js";
 import StudentService from "../student/student.service.js";
 import StudentServiceInterface from "../student/IStudent.service.js";
+import { log } from "console";
 
 // Initialize logger
 const logger = createCustomLogger({
@@ -186,6 +187,21 @@ export default class LessonService implements LessonServiceInterface {
     logger.info(`Lesson with ID ${lessonId} retrieved successfully.`);
     return lesson;
   }
+
+  async getLessonsByStudentId(studentId: string): Promise<Lesson[]> {
+    logger.info(`Fetching lessons for student ${studentId}`)
+    const lessons = await this.lessonRepository.getLessonsByStudentId(studentId);
+
+    if(!lessons) {
+      logger.error(`Lesson with student ID ${studentId} not found.`);
+      throw new createHttpError.NotFound(
+        `Lesson with student ID ${studentId} not found`
+      );
+    }
+    logger.info(`Lesson with studentId ${studentId} retrieved successfully.`);
+    return lessons;
+  }
+
 
   /**
    * Retrieves all lessons within a specified date range.

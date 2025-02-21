@@ -44,10 +44,14 @@ export const useInstructors = () => {
       await InstructorService.deleteInstructorById(id);
       await fetchInstructors();
     };
+
+    const getInstructorById = async ( id: string ) => {
+      return await InstructorService.getInstructorById(id);
+    }
   
     useEffect(() => {
       fetchInstructors();
     }, []);
 
-    return { instructors, addInstructor, updateInstructor, deleteInstructor, fetchInstructors }
+    return { instructors, addInstructor, updateInstructor, deleteInstructor, getInstructorById, fetchInstructors }
 }

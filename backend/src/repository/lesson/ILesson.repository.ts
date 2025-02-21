@@ -5,6 +5,7 @@ import Lesson from "../../dto/lesson/lesson.dto.js";
  * Defines the contract for managing lesson data in the data source.
  */
 export default interface LessonRepositoryInterface {
+  getLessonsByStudentId(studentId: string): Promise<Lesson[]>;
   /**
    * Creates a new lesson in the data source.
    * @param lessonData - The data for the new lesson.

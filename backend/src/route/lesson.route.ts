@@ -222,6 +222,13 @@ lessonRouter.get(
   }
 );
 
+lessonRouter.get(
+  "/students/:studentId",
+  (req: Request, res: Response) => {
+    lessonController.getLessonsByStudentId(req, res)
+  }
+)
+
 /**
  * @swagger
  * /lesson/{lessonId}:

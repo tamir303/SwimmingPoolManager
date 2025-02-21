@@ -40,6 +40,8 @@ export default interface LessonServiceInterface {
     day: Date
   ): Promise<Lesson[]>;
 
+  getLessonsByStudentId(studentId: string): Promise<Lesson[]>
+
   /**
    * Updates a lesson by its ID.
    * @param lessonId - The unique identifier of the lesson to update.

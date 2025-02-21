@@ -11,6 +11,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "concurrently": "^9.1.2"
+    "concurrently": "^9.1.2",
+    "fusioncharts": "^4.1.2",
+    "react-fusioncharts": "^4.1.0"
   }
 }

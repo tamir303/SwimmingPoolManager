@@ -6,248 +6,291 @@ import {
   TouchableOpacity,
   SafeAreaView,
 } from "react-native";
-import { Button } from "react-native-paper";
-import LessonService from "../../services/lesson.service";
-import InstructorService from "../../services/instructor.service";
-import Lesson from "../../dto/lesson/lesson.dto";
-import { useNavigation, useIsFocused } from "@react-navigation/native";
 import { useAuth } from "../../hooks/authContext";
+import Lesson from "../../dto/lesson/lesson.dto";
+import Instructor from "../../dto/instructor/instructor.dto";
+import useLesson from "../../hooks/LessonHooks/useLessons";
+import { useInstructors } from "../../hooks/instructorHooks/useInstructors";
+import { useNavigation } from "@react-navigation/native";
 import Footer from "../../components/Footer";
-import CustomModal from "../../components/Modal";
-import styles from "./styles/CalenderScreen.styles";
+import Icon from "react-native-vector-icons/FontAwesome"; // For navigation icons
+import styles from "./styles/CalenderScreen.styles"
 
-// Helper function to get the dates for the current week (Sunday to Saturday)
-const getWeekDates = (offset: number = 0): Date[] => {
-  const today = new Date();
-  const currentDay = today.getDay();
-  const startOfWeek = new Date(today);
-  startOfWeek.setDate(today.getDate() - currentDay + offset);
-  return Array.from({ length: 7 }, (_, i) => {
-    const date = new Date(startOfWeek);
-    date.setDate(startOfWeek.getDate() + i);
-    return date;
-  });
-};
+// Constants for dimensions
+const HOUR_HEIGHT = 60; // Height per hour
+const START_HOUR = 8; // 8 AM
+const END_HOUR = 22; // 10 PM
+const TOTAL_HOURS = END_HOUR - START_HOUR; // 14 hours
+const DAY_WIDTH = 150; // Width per day
+const MARGIN = 5; // Margin between lessons
+
+interface LessonWithPosition extends Lesson {
+  adjustedWidth: number;
+  offsetX: number;
+}
 
 const CalendarScreen: React.FC = () => {
-  const navigation = useNavigation();
-  const isFocused = useIsFocused();
   const { user } = useAuth();
+  const { getLessonsWithinRange } = useLesson();
+  const { getInstructorById } = useInstructors();
+  const navigation = useNavigation();
 
-  // Week offset state (in days; multiples of 7)
-  const [currentWeekOffset, setCurrentWeekOffset] = useState(0);
-  const [weekDates, setWeekDates] = useState<Date[]>(getWeekDates(currentWeekOffset));
   const [lessons, setLessons] = useState<Lesson[]>([]);
-  const [userInstructor, setUserInstructor] = useState<any>(null);
-  const [selectedCell, setSelectedCell] = useState<{
-    day: string;
-    hour: string;
-    lessons: Lesson[];
-    date: Date;
-  } | null>(null);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [userInstructor, setUserInstructor] = useState<Instructor | null>(null);
+  const [weekRange, setWeekRange] = useState<{ start: Date; end: Date }>({
+    start: new Date(),
+    end: new Date(),
+  });
 
-  // Gantt chart settings: Timeline from 8 AM to 10 PM
-  const timelineStartHour = 8;
-  const timelineEndHour = 22;
-  const cellHeight = 40; // each hour cell height
-  const timelineTotalHeight = (timelineEndHour - timelineStartHour) * cellHeight;
-  const hours = Array.from({ length: timelineEndHour - timelineStartHour }, (_, i) => i + timelineStartHour);
-
-  // Update weekDates when week offset changes.
-  useEffect(() => {
-    setWeekDates(getWeekDates(currentWeekOffset));
-  }, [currentWeekOffset]);
-
-  // Fetch lessons for the current week.
-  useEffect(() => {
-    const fetchLessons = async () => {
-      if (weekDates.length === 0) return;
-      const start = new Date(weekDates[0]);
-      start.setHours(6, 0, 0, 0);
-      const end = new Date(weekDates[6]);
-      end.setHours(23, 59, 59, 999);
-      try {
-        const fetchedLessons = await LessonService.getLessonsWithinRange(start, end);
-        const normalizedLessons: Lesson[] = fetchedLessons.map((lesson) => ({
-          ...lesson,
-          startAndEndTime: {
-            startTime: new Date(lesson.startAndEndTime.startTime),
-            endTime: new Date(lesson.startAndEndTime.endTime),
-          },
-        }));
-        setLessons(normalizedLessons);
-      } catch (error) {
-        console.error("Error fetching lessons:", error);
-      }
-    };
-    if (isFocused) {
-      fetchLessons();
+  // Fetch lessons and instructor data based on weekRange
+  const fetchData = async (start: Date, end: Date) => {
+    try {
+      const fetchedLessons: Lesson[] = await getLessonsWithinRange(start, end);
+      setLessons(fetchedLessons);
+      setWeekRange({ start, end });
+    } catch (error) {
+      console.error("Error fetching lessons:", error);
     }
-  }, [weekDates, isFocused]);
 
-  // Fetch instructor data.
-  useEffect(() => {
-    const fetchInstructor = async () => {
-      if (user && user.id) {
-        const instructor = await InstructorService.getInstructorById(user.id);
+    if (user?.id && !userInstructor) {
+      try {
+        const instructor: Instructor = await getInstructorById(user.id);
         setUserInstructor(instructor);
+      } catch (error) {
+        console.error("Error fetching instructor:", error);
       }
-    };
-    fetchInstructor();
+    }
+  };
+
+  // Initial fetch on mount or when user changes
+  useEffect(() => {
+    const today = new Date();
+    const sunday = new Date(today);
+    sunday.setDate(today.getDate() - today.getDay());
+    sunday.setHours(0, 0, 0, 0);
+
+    const saturday = new Date(sunday);
+    saturday.setDate(sunday.getDate() + 6);
+    saturday.setHours(23, 59, 59, 999);
+
+    fetchData(sunday, saturday);
   }, [user]);
 
-  // Handler when a cell is pressed.
-  const handleCellPress = (day: string, hour: string, date: Date) => {
-    const cellLessons = lessons.filter((lesson) => {
-      const lessonDate = new Date(lesson.startAndEndTime.startTime);
-      return (
-        lessonDate.toDateString() === date.toDateString() &&
-        lessonDate.getHours() === parseInt(hour.split(":")[0], 10)
+  // Handle navigation to previous week
+  const handlePreviousWeek = () => {
+    const newStart = new Date(weekRange.start);
+    newStart.setDate(newStart.getDate() - 7);
+    const newEnd = new Date(newStart);
+    newEnd.setDate(newEnd.getDate() + 6);
+    newEnd.setHours(23, 59, 59, 999);
+    fetchData(newStart, newEnd);
+  };
+
+  // Handle navigation to next week
+  const handleNextWeek = () => {
+    const newStart = new Date(weekRange.start);
+    newStart.setDate(newStart.getDate() + 7);
+    const newEnd = new Date(newStart);
+    newEnd.setDate(newEnd.getDate() + 6);
+    newEnd.setHours(23, 59, 59, 999);
+    fetchData(newStart, newEnd);
+  };
+
+  // Function to calculate overlaps and adjust lesson positions
+  const calculateLessonPositions = (): LessonWithPosition[] => {
+    const lessonsByDay: { [dayIndex: number]: Lesson[] } = {};
+
+    // Group lessons by day
+    lessons.forEach((lesson) => {
+      const start = new Date(lesson.startAndEndTime.startTime);
+      const dayIndex = Math.floor(
+        (start.getTime() - weekRange.start.getTime()) / (1000 * 60 * 60 * 24)
       );
+      if (!lessonsByDay[dayIndex]) lessonsByDay[dayIndex] = [];
+      lessonsByDay[dayIndex].push(lesson);
     });
-    setSelectedCell({ day, hour, lessons: cellLessons, date });
-    setModalVisible(true);
-  };
 
-  // Render the hours column.
-  const renderHoursColumn = () => (
-    <View style={styles.hoursColumn}>
-      {hours.map((hour) => (
-        <View key={hour.toString()} style={styles.hourCell}>
-          <Text style={styles.hourLabel}>{hour}:00</Text>
-        </View>
-      ))}
-    </View>
-  );
+    const positionedLessons: LessonWithPosition[] = [];
 
-  // Render a single cell for a given date and hour.
-  const renderCell = (date: Date, hour: number) => {
-    const cellLessons = lessons.filter((lesson) => {
-      const lessonDate = new Date(lesson.startAndEndTime.startTime);
-      return (
-        lessonDate.toDateString() === date.toDateString() &&
-        lessonDate.getHours() === hour
+    // Process each day's lessons
+    Object.keys(lessonsByDay).forEach((dayIndexStr) => {
+      const dayIndex = parseInt(dayIndexStr, 10);
+      const dayLessons = lessonsByDay[dayIndex];
+
+      // Sort lessons by start time
+      dayLessons.sort(
+        (a, b) =>
+          new Date(a.startAndEndTime.startTime).getTime() -
+          new Date(b.startAndEndTime.startTime).getTime()
       );
+
+      // Track overlapping groups
+      const overlapGroups: Lesson[][] = [];
+      dayLessons.forEach((lesson) => {
+        const start = new Date(lesson.startAndEndTime.startTime).getTime();
+        const end = new Date(lesson.startAndEndTime.endTime).getTime();
+
+        let placed = false;
+        for (const group of overlapGroups) {
+          const overlaps = group.some((other) => {
+            const otherStart = new Date(other.startAndEndTime.startTime).getTime();
+            const otherEnd = new Date(other.startAndEndTime.endTime).getTime();
+            return start < otherEnd && end > otherStart;
+          });
+          if (overlaps) {
+            group.push(lesson);
+            placed = true;
+            break;
+          }
+        }
+        if (!placed) overlapGroups.push([lesson]);
+      });
+
+      // Assign positions and widths
+      overlapGroups.forEach((group) => {
+        const count = group.length;
+        const totalMargin = (count - 1) * MARGIN;
+        const adjustedWidth = (DAY_WIDTH - totalMargin) / count;
+
+        group.forEach((lesson, index) => {
+          positionedLessons.push({
+            ...lesson,
+            adjustedWidth,
+            offsetX: index * (adjustedWidth + MARGIN),
+          });
+        });
+      });
     });
-    let bgColor = "#808080"; // Gray if no lesson.
-    if (cellLessons.length > 0) {
-      if (
-        cellLessons.some(
-          (lesson) =>
-            userInstructor &&
-            lesson.instructorId === userInstructor.instructorId
-        )
-      ) {
-        bgColor = "#008000"; // Green if taught by current instructor.
-      } else {
-        bgColor = "#00008B"; // Dark blue otherwise.
-      }
-    }
-    return (
-      <TouchableOpacity
-        style={[styles.cell, { backgroundColor: bgColor }]}
-        key={hour.toString()}
-        onPress={() => handleCellPress(date.toDateString(), `${hour}:00`, date)}
-      >
-        {cellLessons.length > 0 && (
-          <Text style={styles.cellText}>{cellLessons.length}</Text>
-        )}
-      </TouchableOpacity>
-    );
-  };
 
-  // Render a column for a given day.
-  const renderDayColumn = (date: Date) => {
-    const isToday = date.toDateString() === new Date().toDateString();
-    return (
-      <View
-        style={[
-          styles.dayColumn,
-          isToday && { backgroundColor: "#bbdefb" } // highlight current day
-        ]}
-        key={date.toDateString()}
-      >
-        <Text style={styles.dayHeader}>
-          {date.toLocaleDateString("en-US", { weekday: "short" })}{"\n"}
-          {date.getDate()}/{date.getMonth() + 1}
-        </Text>
-        <View style={[styles.timeline, { height: timelineTotalHeight }]}>
-          {Array.from({ length: timelineEndHour - timelineStartHour }, (_, i) => {
-            const hour = timelineStartHour + i;
-            return renderCell(date, hour);
-          })}
-        </View>
-      </View>
-    );
+    return positionedLessons;
   };
-
-  // Week Navigation Header: Two blue buttons: Previous Week and Next Week.
-  const renderWeekNavigation = () => (
-    <View style={styles.weekNavContainer}>
-      <TouchableOpacity
-        style={styles.navButton}
-        onPress={() => setCurrentWeekOffset(currentWeekOffset - 7)}
-      >
-        <Text style={styles.navButtonText}>Previous Week</Text>
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.navButton}
-        onPress={() => setCurrentWeekOffset(currentWeekOffset + 7)}
-      >
-        <Text style={styles.navButtonText}>Next Week</Text>
-      </TouchableOpacity>
-    </View>
-  );
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.safeArea}>
+      {/* Enhanced Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerText}>📅 Schedule Your Lessons</Text>
+      </View>
+
+      {/* Navigation Buttons with Icons */}
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.navButton} onPress={handlePreviousWeek}>
+          <Icon name="arrow-left" size={18} color="#FFF" />
+          <Text style={styles.buttonText}>Previous</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.navButton} onPress={handleNextWeek}>
+          <Text style={styles.buttonText}>Next</Text>
+          <Icon name="arrow-right" size={18} color="#FFF" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Gantt Chart Container */}
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.simpleHeader}>
-          <Text style={styles.simpleHeaderText}>Calendar</Text>
-        </View>
-        {/* Week Navigation */}
-        {renderWeekNavigation()}
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
+          showsVerticalScrollIndicator={false}
+        >
+          <ScrollView
+            horizontal
+            contentContainerStyle={{ width: DAY_WIDTH * 7 }}
+            showsHorizontalScrollIndicator={false}
+          >
+            <View style={styles.calendarContainer}>
+              {/* Render hour markers with improved styling */}
+              {Array.from({ length: TOTAL_HOURS }).map((_, hourIndex) => (
+                <View
+                  key={hourIndex}
+                  style={[styles.hourMarker, { top: hourIndex * HOUR_HEIGHT }]}
+                >
+                  <Text style={styles.hourText}>
+                    {START_HOUR + hourIndex}:00
+                  </Text>
+                </View>
+              ))}
 
-        {/* Calendar Grid with Hours Column */}
-        <ScrollView contentContainerStyle={styles.calendarContainer} horizontal>
-          {renderHoursColumn()}
-          {weekDates.map((date) => renderDayColumn(date))}
-        </ScrollView>
-
-        {/* Modal for Lesson Details */}
-        {modalVisible && selectedCell && (
-          <SafeAreaView style={styles.modalContainer}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>
-                Lessons for {selectedCell.day}, {selectedCell.hour}
-              </Text>
-              <ScrollView style={styles.modalScroll}>
-                {selectedCell.lessons.map((lesson) => (
-                  <View key={lesson.lessonId} style={styles.lessonItem}>
-                    <Text style={styles.lessonText}>
-                      {lesson.typeLesson} | {lesson.specialties.join(", ")}
+              {/* Render day columns with subtle background alternation */}
+              {Array.from({ length: 7 }).map((_, dayIndex) => (
+                <View
+                  key={dayIndex}
+                  style={[
+                    styles.dayColumn,
+                    { left: dayIndex * DAY_WIDTH },
+                    dayIndex % 2 === 0 ? styles.dayColumnEven : styles.dayColumnOdd,
+                  ]}
+                >
+                  <View style={styles.dayHeader}>
+                    <Text style={styles.dayText}>
+                      {new Date(
+                        weekRange.start.getTime() + dayIndex * 86400000
+                      ).toLocaleDateString("en-US", { weekday: "short" })}
                     </Text>
-                    <Text style={styles.lessonTime}>
-                      {new Date(lesson.startAndEndTime.startTime).toLocaleTimeString()} -{" "}
-                      {new Date(lesson.startAndEndTime.endTime).toLocaleTimeString()}
+                    <Text style={styles.dateText}>
+                      {new Date(
+                        weekRange.start.getTime() + dayIndex * 86400000
+                      ).getDate()}
                     </Text>
                   </View>
-                ))}
-              </ScrollView>
-              <Button mode="contained" onPress={() => setModalVisible(false)}>
-                Close
-              </Button>
+                </View>
+              ))}
+
+              {/* Render lessons with improved styling */}
+              {calculateLessonPositions().map((lesson) => {
+                const start = new Date(lesson.startAndEndTime.startTime);
+                const end = new Date(lesson.startAndEndTime.endTime);
+                const dayIndex = Math.floor(
+                  (start.getTime() - weekRange.start.getTime()) / (1000 * 60 * 60 * 24)
+                );
+                const startHour = start.getHours() + start.getMinutes() / 60;
+                const endHour = end.getHours() + end.getMinutes() / 60;
+
+                if (startHour >= END_HOUR || endHour <= START_HOUR) {
+                  return null;
+                }
+
+                const adjustedStartHour = Math.max(startHour, START_HOUR);
+                const adjustedEndHour = Math.min(endHour, END_HOUR);
+                const top = (adjustedStartHour - START_HOUR) * HOUR_HEIGHT;
+                const height = (adjustedEndHour - adjustedStartHour) * HOUR_HEIGHT;
+                const left = dayIndex * DAY_WIDTH + lesson.offsetX;
+
+                return (
+                  <TouchableOpacity
+                    key={lesson.lessonId}
+                    style={[
+                      styles.lessonBar,
+                      {
+                        left,
+                        top,
+                        width: lesson.adjustedWidth,
+                        height,
+                        backgroundColor:
+                          lesson.instructorId === userInstructor?.id
+                            ? "#6C63FF" // Purple for user
+                            : "#4CAF50", // Green for others
+                      },
+                    ]}
+                    onPress={() => console.log("Lesson pressed:", lesson)}
+                  >
+                    <Text style={styles.lessonText} numberOfLines={1}>
+                      {lesson.typeLesson} (
+                      {start.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}{" "}
+                      -{" "}
+                      {end.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
+                      )
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          </SafeAreaView>
-        )}
-
-        <Button mode="outlined" onPress={() => navigation.goBack()} style={styles.backButton}>
-          Back
-        </Button>
-
-        {/* Footer */}
+          </ScrollView>
+        </ScrollView>
         <Footer navigation={navigation} />
       </View>
     </SafeAreaView>

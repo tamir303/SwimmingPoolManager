@@ -58,6 +58,19 @@ export default class LessonRepository implements LessonRepositoryInterface {
     }
   }
 
+  async getLessonsByStudentId(studentId: string): Promise<Lesson[]> {
+    logger.info(`Fetching lesson with student ID: ${studentId}`);
+    try {
+      const lessonDocs = await LessonModel.find({ "students.id": studentId }).exec();
+      return lessonDocs.map(Lesson.fromModel)
+    } catch (error: any) {
+      logger.error(
+        `Failed to fetch lesson with student ID ${studentId}: ${error.message}`
+      );
+      throw error;
+    }
+  }
+
   /**
    * Retrieves all lessons within a specified date range.
    * @param start - The start date of the range.

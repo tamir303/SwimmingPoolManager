@@ -2,128 +2,138 @@ import { StyleSheet, Dimensions, StatusBar } from "react-native";
 
 const { width, height } = Dimensions.get("window");
 
+// Constants for dimensions
+const HOUR_HEIGHT = 60; // Height per hour
+const START_HOUR = 8; // 8 AM
+const END_HOUR = 22; // 10 PM
+const TOTAL_HOURS = END_HOUR - START_HOUR; // 14 hours
+const DAY_WIDTH = 150; // Width per day
+
 export default StyleSheet.create({
-  container: {
+  safeArea: {
     flex: 1,
-    backgroundColor: "#F8F9FA",
-    padding: 10,
-    paddingTop: StatusBar.currentHeight || 24,
+    backgroundColor: "#F0F4F8", // Light blue-gray background
   },
-  simpleHeader: {
+  header: {
+    height: 70,
+    backgroundColor: "#34495E", // Dark blue header
+    justifyContent: "center",
     alignItems: "center",
-    marginBottom: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    elevation: 3,
   },
-  simpleHeaderText: {
-    fontSize: 26,
-    fontWeight: "bold",
-    color: "#333",
+  headerText: {
+    fontSize: 24,
+    fontWeight: "700",
+    color: "#FFF",
   },
-  weekNavContainer: {
+  buttonContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
     paddingHorizontal: 20,
-    marginBottom: 10,
+    paddingVertical: 10,
+    backgroundColor: "#FFF",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
   },
   navButton: {
-    backgroundColor: "#6C63FF",
-    paddingVertical: 8,
-    paddingHorizontal: 12,
-    borderRadius: 5,
-  },
-  navButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  calendarContainer: {
     flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#E67E22", // Orange for contrast
     paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    elevation: 2,
   },
-  // Hours column
-  hoursColumn: {
-    width: 50,
-    justifyContent: "flex-start",
-    alignItems: "center",
-    marginRight: 5,
-  },
-  hourCell: {
-    height: 40,
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: 2,
-  },
-  hourLabel: {
-    fontSize: 14,
-    color: "#555",
-  },
-  // Day column
-  dayColumn: {
-    width: 150,
-    marginHorizontal: 5,
-    alignItems: "center",
-  },
-  dayHeader: {
+  buttonText: {
+    color: "#FFF",
     fontSize: 16,
     fontWeight: "600",
-    textAlign: "center",
-    marginBottom: 5,
-    height: 40,
+    marginHorizontal: 5,
   },
-  timeline: {
-    width: "100%",
-    backgroundColor: "#eee",
+  container: {
+    flex: 1,
+    backgroundColor: "#FFF",
+  },
+  scrollView: {
+    flex: 1,
+  },
+  calendarContainer: {
     position: "relative",
+    width: DAY_WIDTH * 7,
+    height: TOTAL_HOURS * HOUR_HEIGHT,
+    backgroundColor: "#F9FBFC", // Very light gray for chart
   },
-  cell: {
-    width: "100%",
-    height: 40,
-    borderWidth: 1,
-    borderColor: "#ccc",
+  hourMarker: {
+    position: "absolute",
+    left: 0,
+    width: 50,
+    height: HOUR_HEIGHT,
     justifyContent: "center",
     alignItems: "center",
-  },
-  cellText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  backButton: {
-    marginTop: 20,
-    alignSelf: "center",
-  },
-  // Modal styles
-  modalContainer: {
-    position: "absolute",
-    top: "20%",
-    left: "10%",
-    right: "10%",
-    backgroundColor: "#fff",
-    padding: 20,
-    borderRadius: 10,
-    elevation: 10,
-  },
-  modalContent: {
-    maxHeight: "70%",
-  },
-  modalTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
-    textAlign: "center",
-  },
-  modalScroll: {
-    marginBottom: 10,
-  },
-  lessonItem: {
-    paddingVertical: 8,
     borderBottomWidth: 1,
-    borderColor: "#ddd",
+    borderBottomColor: "#E0E0E0",
+  },
+  hourText: {
+    fontSize: 12,
+    color: "#7F8C8D", // Muted gray
+    fontWeight: "500",
+  },
+  dayColumn: {
+    position: "absolute",
+    top: 0,
+    width: DAY_WIDTH,
+    height: "100%",
+    borderRightWidth: 1,
+    borderRightColor: "#E0E0E0",
+  },
+  dayColumnEven: {
+    backgroundColor: "#F4F6F8", // Alternating background
+  },
+  dayColumnOdd: {
+    backgroundColor: "#FFF",
+  },
+  dayHeader: {
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#34495E", // Matches header
+    borderBottomWidth: 1,
+    borderBottomColor: "#2C3E50",
+  },
+  dayText: {
+    fontSize: 14,
+    color: "#BDC3C7", // Light gray
+    fontWeight: "600",
+  },
+  dateText: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#FFF",
+  },
+  lessonBar: {
+    position: "absolute",
+    borderRadius: 6,
+    padding: 6,
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.2,
+    elevation: 2,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.5)",
   },
   lessonText: {
-    fontSize: 16,
-    color: "#333",
-  },
-  lessonTime: {
-    fontSize: 14,
-    color: "#666",
+    color: "#FFF",
+    fontSize: 12,
+    fontWeight: "600",
+    textShadowColor: "rgba(0, 0, 0, 0.1)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
   },
 });

@@ -3,6 +3,8 @@ import { Request, Response } from "express";
 import LessonService from "../service/lesson/lesson.service.js";
 import LessonServiceInterface from "../service/lesson/ILesson.service.js";
 import { createCustomLogger } from "../etc/logger.etc.js";
+import { ParamsDictionary } from "express-serve-static-core";
+import { ParsedQs } from "qs";
 
 // Initialize logger
 const logger = createCustomLogger({
@@ -145,6 +147,35 @@ export default class LessonController {
         process.env.NODE_ENV !== "prod"
           ? error.message
           : `An error occurred while retriving instructor ${instructorId} by day ${day}.`;
+      return res.status(error.status || 500).json({ error: errorMessage });
+    }
+  }
+
+  async getLessonsByStudentId(
+    req: Request,
+    res: Response
+  ): Promise<Response> {
+    const { studentId } = req.params;
+    logger.info(
+      `Received request to fetch lessons for student ${studentId}`
+    );
+    try {
+      const lessons = await this.lessonService.getLessonsByStudentId(
+        studentId,
+      );
+      logger.info(
+        `Retrieved ${lessons.length} lessons for instructor ${studentId}.`
+      );
+      return res.status(200).json(lessons);
+    } catch (error: any) {
+      logger.error(
+        `Error fetching lessons for instructor ${studentId}:`,
+        error
+      );
+      const errorMessage =
+        process.env.NODE_ENV !== "prod"
+          ? error.message
+          : `An error occurred while retriving instructor ${studentId}.`;
       return res.status(error.status || 500).json({ error: errorMessage });
     }
   }

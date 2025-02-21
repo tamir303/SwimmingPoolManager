@@ -140,7 +140,7 @@ const MainScreen: React.FC = () => {
       return;
     }
 
-    const day: number = getDayIndexInMonth(Object.values(DaysOfWeek).indexOf(selectedLessonDay))
+    const day: number = getDayIndexInMonth(Object.values(DaysOfWeek).indexOf(selectedLessonDay)) + 1
     const adjustStartTime: Date = adjustTime(lessonStartTime)
     const adjustEndTime: Date = adjustTime(lessonEndTime)
     adjustStartTime.setDate(day)

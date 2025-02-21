@@ -1,22 +1,21 @@
-import { StyleSheet, Dimensions, StatusBar } from "react-native";
+import { StyleSheet } from "react-native";
 
-const { width, height } = Dimensions.get("window");
-
-// Constants for dimensions
 const HOUR_HEIGHT = 60; // Height per hour
 const START_HOUR = 8; // 8 AM
 const END_HOUR = 22; // 10 PM
 const TOTAL_HOURS = END_HOUR - START_HOUR; // 14 hours
 const DAY_WIDTH = 150; // Width per day
+const HOUR_BAR_WIDTH = 50; // Width of the fixed hour bar
+const FOOTER_HEIGHT = 60; // Define footer height explicitly
 
 export default StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: "#F0F4F8", // Light blue-gray background
+    backgroundColor: "#F0F4F8",
   },
   header: {
     height: 70,
-    backgroundColor: "#34495E", // Dark blue header
+    backgroundColor: "#34495E",
     justifyContent: "center",
     alignItems: "center",
     shadowColor: "#000",
@@ -41,7 +40,7 @@ export default StyleSheet.create({
   navButton: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#E67E22", // Orange for contrast
+    backgroundColor: "#E67E22",
     paddingVertical: 10,
     paddingHorizontal: 15,
     borderRadius: 8,
@@ -56,9 +55,29 @@ export default StyleSheet.create({
     fontWeight: "600",
     marginHorizontal: 5,
   },
-  container: {
+  chartContainer: {
     flex: 1,
+    flexDirection: "row", // Hour bar and chart side by side
     backgroundColor: "#FFF",
+  },
+  hourBar: {
+    width: HOUR_BAR_WIDTH,
+    height: TOTAL_HOURS * HOUR_HEIGHT,
+    backgroundColor: "#F4F6F8",
+    borderRightWidth: 1,
+    borderRightColor: "#E0E0E0",
+  },
+  hourBarMarker: {
+    height: HOUR_HEIGHT,
+    justifyContent: "center",
+    alignItems: "center",
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  hourBarText: {
+    fontSize: 12,
+    color: "#34495E",
+    fontWeight: "600",
   },
   scrollView: {
     flex: 1,
@@ -67,22 +86,8 @@ export default StyleSheet.create({
     position: "relative",
     width: DAY_WIDTH * 7,
     height: TOTAL_HOURS * HOUR_HEIGHT,
-    backgroundColor: "#F9FBFC", // Very light gray for chart
-  },
-  hourMarker: {
-    position: "absolute",
-    left: 0,
-    width: 50,
-    height: HOUR_HEIGHT,
-    justifyContent: "center",
-    alignItems: "center",
-    borderBottomWidth: 1,
-    borderBottomColor: "#E0E0E0",
-  },
-  hourText: {
-    fontSize: 12,
-    color: "#7F8C8D", // Muted gray
-    fontWeight: "500",
+    backgroundColor: "#F9FBFC",
+    marginLeft: HOUR_BAR_WIDTH, // Offset to avoid overlapping hour bar
   },
   dayColumn: {
     position: "absolute",
@@ -93,7 +98,7 @@ export default StyleSheet.create({
     borderRightColor: "#E0E0E0",
   },
   dayColumnEven: {
-    backgroundColor: "#F4F6F8", // Alternating background
+    backgroundColor: "#F4F6F8",
   },
   dayColumnOdd: {
     backgroundColor: "#FFF",
@@ -102,13 +107,13 @@ export default StyleSheet.create({
     height: 50,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#34495E", // Matches header
+    backgroundColor: "#34495E",
     borderBottomWidth: 1,
     borderBottomColor: "#2C3E50",
   },
   dayText: {
     fontSize: 14,
-    color: "#BDC3C7", // Light gray
+    color: "#BDC3C7",
     fontWeight: "600",
   },
   dateText: {
@@ -128,16 +133,46 @@ export default StyleSheet.create({
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.5)",
   },
-  lessonText: {
+  lessonContent: {
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  lessonInstructor: {
+    fontSize: 14,
+    fontWeight: "700",
     color: "#FFF",
-    fontSize: 12,
-    fontWeight: "600",
-    textShadowColor: "rgba(0, 0, 0, 0.1)",
+    marginBottom: 2,
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
-  chartContainer: {
-    flex: 1, // Takes up remaining space
+  lessonType: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "rgba(255, 255, 255, 0.9)",
+    marginBottom: 2,
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  lessonTime: {
+    fontSize: 10,
+    fontWeight: "400",
+    color: "rgba(255, 255, 255, 0.8)",
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  footerContainer: {
+    position: "absolute",
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: FOOTER_HEIGHT,
+    backgroundColor: "#FFF",
+    borderTopWidth: 1,
+    borderTopColor: "#E0E0E0",
   },
   modalContent: {
     padding: 20,
@@ -148,7 +183,7 @@ export default StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
-    maxHeight: "80%", // Limit height to avoid overflow
+    maxHeight: "80%",
   },
   modalTitle: {
     fontSize: 20,
@@ -185,7 +220,7 @@ export default StyleSheet.create({
   },
   studentTableContainer: {
     marginTop: 10,
-    maxHeight: 200, // Limit table height with scrolling
+    maxHeight: 200,
   },
   tableHeader: {
     flexDirection: "row",
@@ -216,36 +251,5 @@ export default StyleSheet.create({
     color: "#999",
     textAlign: "center",
     marginVertical: 10,
-  },
-  lessonContent: {
-    flexDirection: "column",
-    justifyContent: "center",
-    alignItems: "flex-start",
-  },
-  lessonInstructor: {
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#FFF",
-    marginBottom: 2,
-    textShadowColor: "rgba(0, 0, 0, 0.3)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 2,
-  },
-  lessonType: {
-    fontSize: 12,
-    fontWeight: "500",
-    color: "rgba(255, 255, 255, 0.9)",
-    marginBottom: 2,
-    textShadowColor: "rgba(0, 0, 0, 0.2)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
-  },
-  lessonTime: {
-    fontSize: 10,
-    fontWeight: "400",
-    color: "rgba(255, 255, 255, 0.8)",
-    textShadowColor: "rgba(0, 0, 0, 0.2)",
-    textShadowOffset: { width: 1, height: 1 },
-    textShadowRadius: 1,
   },
 });

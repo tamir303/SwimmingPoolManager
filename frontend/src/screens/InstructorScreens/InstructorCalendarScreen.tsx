@@ -13,18 +13,19 @@ import useLesson from "../../hooks/LessonHooks/useLessons";
 import { useInstructors } from "../../hooks/instructorHooks/useInstructors";
 import { useNavigation } from "@react-navigation/native";
 import Footer from "../../components/Footer";
-import Icon from "react-native-vector-icons/FontAwesome"; // For navigation icons
-import styles from "./styles/CalenderScreen.styles"
+import Icon from "react-native-vector-icons/FontAwesome";
+import styles from "./styles/CalenderScreen.styles";
 import CustomModal from "../../components/Modal";
 import Student from "../../dto/student/student.dto";
 
-// Constants for dimensions
 const HOUR_HEIGHT = 60; // Height per hour
 const START_HOUR = 8; // 8 AM
 const END_HOUR = 22; // 10 PM
 const TOTAL_HOURS = END_HOUR - START_HOUR; // 14 hours
 const DAY_WIDTH = 150; // Width per day
 const MARGIN = 5; // Margin between lessons
+const HOUR_BAR_WIDTH = 50; // Width of the fixed hour bar
+const FOOTER_HEIGHT = 60; // Define footer height explicitly
 
 interface LessonWithPosition extends Lesson {
   adjustedWidth: number;
@@ -40,26 +41,24 @@ const CalendarScreen: React.FC = () => {
   const { user } = useAuth();
   const { getLessonsWithinRange } = useLesson();
   const { getInstructorById, instructors, fetchInstructors } = useInstructors();
-  
   const navigation = useNavigation();
 
-  const [modalVisible, setModalVisible] = useState<boolean>(false)
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [allInstructors, setAllInstructors] = useState<Instructor[]>([]);
   const [userInstructor, setUserInstructor] = useState<Instructor | null>(null);
-  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null)
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [weekRange, setWeekRange] = useState<{ start: Date; end: Date }>({
     start: new Date(),
     end: new Date(),
   });
 
-  // Fetch lessons and instructor data based on weekRange
   const fetchData = async (start: Date, end: Date) => {
     try {
       const fetchedLessons: Lesson[] = await getLessonsWithinRange(start, end);
-      const fetchedInstructors: Instructor[] = await fetchInstructors()
+      const fetchedInstructors: Instructor[] = await fetchInstructors();
       setLessons(fetchedLessons);
-      setAllInstructors(fetchedInstructors)
+      setAllInstructors(fetchedInstructors);
       setWeekRange({ start, end });
     } catch (error) {
       console.error("Error fetching lessons:", error);
@@ -75,7 +74,6 @@ const CalendarScreen: React.FC = () => {
     }
   };
 
-  // Initial fetch on mount or when user changes
   useEffect(() => {
     const today = new Date();
     const sunday = new Date(today);
@@ -89,7 +87,6 @@ const CalendarScreen: React.FC = () => {
     fetchData(sunday, saturday);
   }, [user]);
 
-  // Handle navigation to previous week
   const handlePreviousWeek = () => {
     const newStart = new Date(weekRange.start);
     newStart.setDate(newStart.getDate() - 7);
@@ -99,7 +96,6 @@ const CalendarScreen: React.FC = () => {
     fetchData(newStart, newEnd);
   };
 
-  // Handle navigation to next week
   const handleNextWeek = () => {
     const newStart = new Date(weekRange.start);
     newStart.setDate(newStart.getDate() + 7);
@@ -110,20 +106,16 @@ const CalendarScreen: React.FC = () => {
   };
 
   const getInstructorNameById = (id: string): string => {
-    console.log(allInstructors)
     if (allInstructors.length > 0) {
-      const instructor = allInstructors.findLast((instructor: Instructor) => instructor.id === id)
-      return instructor ? instructor.name : "undefined"
+      const instructor = allInstructors.findLast((instructor: Instructor) => instructor.id === id);
+      return instructor ? instructor.name : "undefined";
     }
+    return "undefined";
+  };
 
-    return "undefined"
-  }
-
-  // Function to calculate overlaps and adjust lesson positions
   const calculateLessonPositions = (): LessonWithPosition[] => {
     const lessonsByDay: { [dayIndex: number]: Lesson[] } = {};
 
-    // Group lessons by day
     lessons.forEach((lesson) => {
       const start = new Date(lesson.startAndEndTime.startTime);
       const dayIndex = Math.floor(
@@ -135,19 +127,16 @@ const CalendarScreen: React.FC = () => {
 
     const positionedLessons: LessonWithPosition[] = [];
 
-    // Process each day's lessons
     Object.keys(lessonsByDay).forEach((dayIndexStr) => {
       const dayIndex = parseInt(dayIndexStr, 10);
       const dayLessons = lessonsByDay[dayIndex];
 
-      // Sort lessons by start time
       dayLessons.sort(
         (a, b) =>
           new Date(a.startAndEndTime.startTime).getTime() -
           new Date(b.startAndEndTime.startTime).getTime()
       );
 
-      // Track overlapping groups
       const overlapGroups: Lesson[][] = [];
       dayLessons.forEach((lesson) => {
         const start = new Date(lesson.startAndEndTime.startTime).getTime();
@@ -169,7 +158,6 @@ const CalendarScreen: React.FC = () => {
         if (!placed) overlapGroups.push([lesson]);
       });
 
-      // Assign positions and widths
       overlapGroups.forEach((group) => {
         const count = group.length;
         const totalMargin = (count - 1) * MARGIN;
@@ -192,7 +180,7 @@ const CalendarScreen: React.FC = () => {
     if (!students || students.length === 0) {
       return <Text style={styles.noStudentsText}>No students enrolled.</Text>;
     }
-  
+
     return (
       <ScrollView style={styles.studentTableContainer} horizontal>
         <View>
@@ -217,12 +205,10 @@ const CalendarScreen: React.FC = () => {
 
   return (
     <SafeAreaView style={styles.safeArea}>
-      {/* Enhanced Header */}
       <View style={styles.header}>
         <Text style={styles.headerText}>📅 Schedule Your Lessons</Text>
       </View>
 
-      {/* Navigation Buttons with Icons */}
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.navButton} onPress={handlePreviousWeek}>
           <Icon name="arrow-left" size={18} color="#FFF" />
@@ -234,11 +220,22 @@ const CalendarScreen: React.FC = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Gantt Chart Container */}
       <View style={styles.chartContainer}>
+        {/* Fixed Hour Bar on the Left */}
+        <View style={styles.hourBar}>
+          {Array.from({ length: TOTAL_HOURS }).map((_, hourIndex) => (
+            <View key={hourIndex} style={styles.hourBarMarker}>
+              <Text style={styles.hourBarText}>
+                {START_HOUR + hourIndex}:00
+              </Text>
+            </View>
+          ))}
+        </View>
+
+        {/* Scrollable Gantt Chart */}
         <ScrollView
           style={styles.scrollView}
-          contentContainerStyle={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
+          contentContainerStyle={{ height: TOTAL_HOURS * HOUR_HEIGHT + FOOTER_HEIGHT, paddingBottom: FOOTER_HEIGHT }}
           showsVerticalScrollIndicator={false}
         >
           <ScrollView
@@ -246,20 +243,7 @@ const CalendarScreen: React.FC = () => {
             contentContainerStyle={{ width: DAY_WIDTH * 7 }}
             showsHorizontalScrollIndicator={false}
           >
-            <View style={styles.calendarContainer}>
-              {/* Render hour markers with improved styling */}
-              {Array.from({ length: TOTAL_HOURS }).map((_, hourIndex) => (
-                <View
-                  key={hourIndex}
-                  style={[styles.hourMarker, { top: hourIndex * HOUR_HEIGHT }]}
-                >
-                  <Text style={styles.hourText}>
-                    {START_HOUR + hourIndex}:00
-                  </Text>
-                </View>
-              ))}
-
-              {/* Render day columns with subtle background alternation */}
+            <View style={[styles.calendarContainer, { marginLeft: HOUR_BAR_WIDTH }]}>
               {Array.from({ length: 7 }).map((_, dayIndex) => (
                 <View
                   key={dayIndex}
@@ -284,7 +268,6 @@ const CalendarScreen: React.FC = () => {
                 </View>
               ))}
 
-              {/* Render lessons with improved styling */}
               {calculateLessonPositions().map((lesson) => {
                 const start = new Date(lesson.startAndEndTime.startTime);
                 const end = new Date(lesson.startAndEndTime.endTime);
@@ -315,85 +298,26 @@ const CalendarScreen: React.FC = () => {
                         width: lesson.adjustedWidth,
                         height,
                         backgroundColor:
-                          lesson.instructorId === userInstructor?.id
-                            ? "#6C63FF" // Purple for user
-                            : "#4CAF50", // Green for others
+                          lesson.instructorId === userInstructor?.id ? "#6C63FF" : "#4CAF50",
                       },
                     ]}
                     onPress={() => {
                       setSelectedLesson(lesson);
-                      setModalVisible(true)
+                      setModalVisible(true);
                     }}
                   >
-
-                  <View style={styles.lessonContent}>
-                    <Text style={styles.lessonInstructor} numberOfLines={1}>
-                      <Icon name="user" size={12} color="#FFF" /> {getInstructorNameById(lesson.instructorId)}
-                    </Text>
-                    <Text style={styles.lessonType} numberOfLines={1}>
-                      {formatSpecialty(lesson.typeLesson)}
-                    </Text>
-                    <Text style={styles.lessonTime} numberOfLines={1}>
-                      {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
-                      {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                    </Text>
-                  </View>
-
-                    {selectedLesson && (
-                      <CustomModal
-                        title={`${selectedLesson.instructorId} - ${formatSpecialty(selectedLesson.typeLesson)}`}
-                        visible={modalVisible}
-                        onClose={() => {
-                          setSelectedLesson(null)
-                          setModalVisible(false)
-                        }}
-                      >
-                        <View style={styles.modalContent}>
-                          <Text style={styles.modalTitle}>
-                            {formatSpecialty(selectedLesson.typeLesson)} Lesson
-                          </Text>
-                          <View style={styles.detailRow}>
-                            <Icon name="user" size={18} color="#6C63FF" style={styles.detailIcon} />
-                            <Text style={styles.detailLabel}>Instructor:</Text>
-                            <Text style={styles.detailValue}>{selectedLesson.instructorId}</Text>
-                          </View>
-                          <View style={styles.detailRow}>
-                            <Icon name="tag" size={18} color="#6C63FF" style={styles.detailIcon} />
-                            <Text style={styles.detailLabel}>Lesson Type:</Text>
-                            <Text style={styles.detailValue}>{formatSpecialty(selectedLesson.typeLesson)}</Text>
-                          </View>
-                          <View style={styles.detailRow}>
-                            <Icon name="swimmer" size={18} color="#6C63FF" style={styles.detailIcon} />
-                            <Text style={styles.detailLabel}>Specialties:</Text>
-                            <Text style={styles.detailValue}>
-                              {selectedLesson.specialties.map(formatSpecialty).join(", ")}
-                            </Text>
-                          </View>
-                          <View style={styles.detailRow}>
-                            <Icon name="clock-o" size={18} color="#6C63FF" style={styles.detailIcon} />
-                            <Text style={styles.detailLabel}>Start Time:</Text>
-                            <Text style={styles.detailValue}>
-                              {new Date(selectedLesson.startAndEndTime.startTime).toLocaleString()}
-                            </Text>
-                          </View>
-                          <View style={styles.detailRow}>
-                            <Icon name="clock-o" size={18} color="#6C63FF" style={styles.detailIcon} />
-                            <Text style={styles.detailLabel}>End Time:</Text>
-                            <Text style={styles.detailValue}>
-                              {new Date(selectedLesson.startAndEndTime.endTime).toLocaleString()}
-                            </Text>
-                          </View>
-                          {selectedLesson.students.length !== 0 ? (
-                            <>
-                              <Text style={styles.sectionTitle}>Students:</Text>
-                              { renderStudents(selectedLesson.students) }
-                            </>
-                          ) : (
-                            <Text style={{ paddingTop: 5 }}>No Students Assigned To Lesson!</Text>
-                          )}
-                        </View>
-                      </CustomModal>
-                    )}
+                    <View style={styles.lessonContent}>
+                      <Text style={styles.lessonInstructor} numberOfLines={1}>
+                        <Icon name="user" size={12} color="#FFF" /> {getInstructorNameById(lesson.instructorId)}
+                      </Text>
+                      <Text style={styles.lessonType} numberOfLines={1}>
+                        {formatSpecialty(lesson.typeLesson)}
+                      </Text>
+                      <Text style={styles.lessonTime} numberOfLines={1}>
+                        {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
+                        {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      </Text>
+                    </View>
                   </TouchableOpacity>
                 );
               })}
@@ -401,7 +325,66 @@ const CalendarScreen: React.FC = () => {
           </ScrollView>
         </ScrollView>
       </View>
-      <Footer navigation={navigation} />
+
+      {selectedLesson && (
+        <CustomModal
+          title={`${getInstructorNameById(selectedLesson.instructorId)} - ${formatSpecialty(selectedLesson.typeLesson)}`}
+          visible={modalVisible}
+          onClose={() => {
+            setSelectedLesson(null);
+            setModalVisible(false);
+          }}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>
+              {formatSpecialty(selectedLesson.typeLesson)} Lesson
+            </Text>
+            <View style={styles.detailRow}>
+              <Icon name="user" size={18} color="#6C63FF" style={styles.detailIcon} />
+              <Text style={styles.detailLabel}>Instructor:</Text>
+              <Text style={styles.detailValue}>{getInstructorNameById(selectedLesson.instructorId)}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Icon name="tag" size={18} color="#6C63FF" style={styles.detailIcon} />
+              <Text style={styles.detailLabel}>Lesson Type:</Text>
+              <Text style={styles.detailValue}>{formatSpecialty(selectedLesson.typeLesson)}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Icon name="swimmer" size={18} color="#6C63FF" style={styles.detailIcon} />
+              <Text style={styles.detailLabel}>Specialties:</Text>
+              <Text style={styles.detailValue}>
+                {selectedLesson.specialties.map(formatSpecialty).join(", ")}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Icon name="clock-o" size={18} color="#6C63FF" style={styles.detailIcon} />
+              <Text style={styles.detailLabel}>Start Time:</Text>
+              <Text style={styles.detailValue}>
+                {new Date(selectedLesson.startAndEndTime.startTime).toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Icon name="clock-o" size={18} color="#6C63FF" style={styles.detailIcon} />
+              <Text style={styles.detailLabel}>End Time:</Text>
+              <Text style={styles.detailValue}>
+                {new Date(selectedLesson.startAndEndTime.endTime).toLocaleString()}
+              </Text>
+            </View>
+            {selectedLesson.students.length !== 0 ? (
+              <>
+                <Text style={styles.sectionTitle}>Students:</Text>
+                {renderStudents(selectedLesson.students)}
+              </>
+            ) : (
+              <Text style={{ paddingTop: 5 }}>No Students Assigned To Lesson!</Text>
+            )}
+          </View>
+        </CustomModal>
+      )}
+
+      <View style={styles.footerContainer}>
+        <Footer navigation={navigation} />
+      </View>
     </SafeAreaView>
   );
 };

@@ -27,6 +27,7 @@ export const useInstructors = () => {
     const fetchInstructors = async () => {
       const data = await InstructorService.getAllInstructors();
       setInstructors(data);
+      return data;
     };
   
     const addInstructor = async ({ password, id, name, specialties, availabilities }: InstructorParams) => {

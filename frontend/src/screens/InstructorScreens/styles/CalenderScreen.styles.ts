@@ -136,4 +136,7 @@ export default StyleSheet.create({
     textShadowOffset: { width: 1, height: 1 },
     textShadowRadius: 2,
   },
+  chartContainer: {
+    flex: 1, // Takes up remaining space
+  },
 });

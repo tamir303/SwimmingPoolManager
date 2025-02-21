@@ -185,7 +185,7 @@ const CalendarScreen: React.FC = () => {
       </View>
 
       {/* Gantt Chart Container */}
-      <View style={styles.container}>
+      <View style={styles.chartContainer}>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={{ height: TOTAL_HOURS * HOUR_HEIGHT }}
@@ -291,8 +291,8 @@ const CalendarScreen: React.FC = () => {
             </View>
           </ScrollView>
         </ScrollView>
-        <Footer navigation={navigation} />
       </View>
+      <Footer navigation={navigation} />
     </SafeAreaView>
   );
 };

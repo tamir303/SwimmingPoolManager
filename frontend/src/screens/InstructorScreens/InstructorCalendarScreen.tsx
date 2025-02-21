@@ -15,6 +15,8 @@ import { useNavigation } from "@react-navigation/native";
 import Footer from "../../components/Footer";
 import Icon from "react-native-vector-icons/FontAwesome"; // For navigation icons
 import styles from "./styles/CalenderScreen.styles"
+import CustomModal from "../../components/Modal";
+import Student from "../../dto/student/student.dto";
 
 // Constants for dimensions
 const HOUR_HEIGHT = 60; // Height per hour
@@ -29,14 +31,23 @@ interface LessonWithPosition extends Lesson {
   offsetX: number;
 }
 
+const formatSpecialty = (specialty: string): string => {
+  const lower = specialty.toLowerCase().replace(/_/g, " ");
+  return lower.charAt(0).toUpperCase() + lower.slice(1);
+};
+
 const CalendarScreen: React.FC = () => {
   const { user } = useAuth();
   const { getLessonsWithinRange } = useLesson();
-  const { getInstructorById } = useInstructors();
+  const { getInstructorById, instructors, fetchInstructors } = useInstructors();
+  
   const navigation = useNavigation();
 
+  const [modalVisible, setModalVisible] = useState<boolean>(false)
   const [lessons, setLessons] = useState<Lesson[]>([]);
+  const [allInstructors, setAllInstructors] = useState<Instructor[]>([]);
   const [userInstructor, setUserInstructor] = useState<Instructor | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null)
   const [weekRange, setWeekRange] = useState<{ start: Date; end: Date }>({
     start: new Date(),
     end: new Date(),
@@ -46,7 +57,9 @@ const CalendarScreen: React.FC = () => {
   const fetchData = async (start: Date, end: Date) => {
     try {
       const fetchedLessons: Lesson[] = await getLessonsWithinRange(start, end);
+      const fetchedInstructors: Instructor[] = await fetchInstructors()
       setLessons(fetchedLessons);
+      setAllInstructors(fetchedInstructors)
       setWeekRange({ start, end });
     } catch (error) {
       console.error("Error fetching lessons:", error);
@@ -95,6 +108,16 @@ const CalendarScreen: React.FC = () => {
     newEnd.setHours(23, 59, 59, 999);
     fetchData(newStart, newEnd);
   };
+
+  const getInstructorNameById = (id: string): string => {
+    console.log(allInstructors)
+    if (allInstructors.length > 0) {
+      const instructor = allInstructors.findLast((instructor: Instructor) => instructor.id === id)
+      return instructor ? instructor.name : "undefined"
+    }
+
+    return "undefined"
+  }
 
   // Function to calculate overlaps and adjust lesson positions
   const calculateLessonPositions = (): LessonWithPosition[] => {
@@ -163,6 +186,33 @@ const CalendarScreen: React.FC = () => {
     });
 
     return positionedLessons;
+  };
+
+  const renderStudents = (students: Student[]) => {
+    if (!students || students.length === 0) {
+      return <Text style={styles.noStudentsText}>No students enrolled.</Text>;
+    }
+  
+    return (
+      <ScrollView style={styles.studentTableContainer} horizontal>
+        <View>
+          <View style={styles.tableHeader}>
+            <Text style={[styles.tableHeaderCell, { width: 100 }]}>ID</Text>
+            <Text style={[styles.tableHeaderCell, { width: 150 }]}>Name</Text>
+            <Text style={[styles.tableHeaderCell, { width: 200 }]}>Preferences</Text>
+          </View>
+          {students.map((student, index) => (
+            <View key={student.id || index} style={styles.tableRow}>
+              <Text style={[styles.tableCell, { width: 100 }]}>{student.id}</Text>
+              <Text style={[styles.tableCell, { width: 150 }]}>{student.name}</Text>
+              <Text style={[styles.tableCell, { width: 200 }]}>
+                {student.preferences.map(formatSpecialty).join(", ")}
+              </Text>
+            </View>
+          ))}
+        </View>
+      </ScrollView>
+    );
   };
 
   return (
@@ -270,21 +320,80 @@ const CalendarScreen: React.FC = () => {
                             : "#4CAF50", // Green for others
                       },
                     ]}
-                    onPress={() => console.log("Lesson pressed:", lesson)}
+                    onPress={() => {
+                      setSelectedLesson(lesson);
+                      setModalVisible(true)
+                    }}
                   >
-                    <Text style={styles.lessonText} numberOfLines={1}>
-                      {lesson.typeLesson} (
-                      {start.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}{" "}
-                      -{" "}
-                      {end.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                      )
+
+                  <View style={styles.lessonContent}>
+                    <Text style={styles.lessonInstructor} numberOfLines={1}>
+                      <Icon name="user" size={12} color="#FFF" /> {getInstructorNameById(lesson.instructorId)}
                     </Text>
+                    <Text style={styles.lessonType} numberOfLines={1}>
+                      {formatSpecialty(lesson.typeLesson)}
+                    </Text>
+                    <Text style={styles.lessonTime} numberOfLines={1}>
+                      {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
+                      {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                    </Text>
+                  </View>
+
+                    {selectedLesson && (
+                      <CustomModal
+                        title={`${selectedLesson.instructorId} - ${formatSpecialty(selectedLesson.typeLesson)}`}
+                        visible={modalVisible}
+                        onClose={() => {
+                          setSelectedLesson(null)
+                          setModalVisible(false)
+                        }}
+                      >
+                        <View style={styles.modalContent}>
+                          <Text style={styles.modalTitle}>
+                            {formatSpecialty(selectedLesson.typeLesson)} Lesson
+                          </Text>
+                          <View style={styles.detailRow}>
+                            <Icon name="user" size={18} color="#6C63FF" style={styles.detailIcon} />
+                            <Text style={styles.detailLabel}>Instructor:</Text>
+                            <Text style={styles.detailValue}>{selectedLesson.instructorId}</Text>
+                          </View>
+                          <View style={styles.detailRow}>
+                            <Icon name="tag" size={18} color="#6C63FF" style={styles.detailIcon} />
+                            <Text style={styles.detailLabel}>Lesson Type:</Text>
+                            <Text style={styles.detailValue}>{formatSpecialty(selectedLesson.typeLesson)}</Text>
+                          </View>
+                          <View style={styles.detailRow}>
+                            <Icon name="swimmer" size={18} color="#6C63FF" style={styles.detailIcon} />
+                            <Text style={styles.detailLabel}>Specialties:</Text>
+                            <Text style={styles.detailValue}>
+                              {selectedLesson.specialties.map(formatSpecialty).join(", ")}
+                            </Text>
+                          </View>
+                          <View style={styles.detailRow}>
+                            <Icon name="clock-o" size={18} color="#6C63FF" style={styles.detailIcon} />
+                            <Text style={styles.detailLabel}>Start Time:</Text>
+                            <Text style={styles.detailValue}>
+                              {new Date(selectedLesson.startAndEndTime.startTime).toLocaleString()}
+                            </Text>
+                          </View>
+                          <View style={styles.detailRow}>
+                            <Icon name="clock-o" size={18} color="#6C63FF" style={styles.detailIcon} />
+                            <Text style={styles.detailLabel}>End Time:</Text>
+                            <Text style={styles.detailValue}>
+                              {new Date(selectedLesson.startAndEndTime.endTime).toLocaleString()}
+                            </Text>
+                          </View>
+                          {selectedLesson.students.length !== 0 ? (
+                            <>
+                              <Text style={styles.sectionTitle}>Students:</Text>
+                              { renderStudents(selectedLesson.students) }
+                            </>
+                          ) : (
+                            <Text style={{ paddingTop: 5 }}>No Students Assigned To Lesson!</Text>
+                          )}
+                        </View>
+                      </CustomModal>
+                    )}
                   </TouchableOpacity>
                 );
               })}

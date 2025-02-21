@@ -139,4 +139,113 @@ export default StyleSheet.create({
   chartContainer: {
     flex: 1, // Takes up remaining space
   },
+  modalContent: {
+    padding: 20,
+    backgroundColor: "#FFF",
+    borderRadius: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+    maxHeight: "80%", // Limit height to avoid overflow
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "700",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 15,
+  },
+  detailRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginVertical: 8,
+  },
+  detailIcon: {
+    marginRight: 10,
+  },
+  detailLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#333",
+    width: 100,
+  },
+  detailValue: {
+    fontSize: 16,
+    color: "#666",
+    flex: 1,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#34495E",
+    marginTop: 20,
+    marginBottom: 10,
+  },
+  studentTableContainer: {
+    marginTop: 10,
+    maxHeight: 200, // Limit table height with scrolling
+  },
+  tableHeader: {
+    flexDirection: "row",
+    backgroundColor: "#34495E",
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  tableHeaderCell: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#FFF",
+    textAlign: "center",
+  },
+  tableRow: {
+    flexDirection: "row",
+    backgroundColor: "#F9FBFC",
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E0E0E0",
+  },
+  tableCell: {
+    fontSize: 14,
+    color: "#333",
+    textAlign: "center",
+  },
+  noStudentsText: {
+    fontSize: 14,
+    color: "#999",
+    textAlign: "center",
+    marginVertical: 10,
+  },
+  lessonContent: {
+    flexDirection: "column",
+    justifyContent: "center",
+    alignItems: "flex-start",
+  },
+  lessonInstructor: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#FFF",
+    marginBottom: 2,
+    textShadowColor: "rgba(0, 0, 0, 0.3)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 2,
+  },
+  lessonType: {
+    fontSize: 12,
+    fontWeight: "500",
+    color: "rgba(255, 255, 255, 0.9)",
+    marginBottom: 2,
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
+  lessonTime: {
+    fontSize: 10,
+    fontWeight: "400",
+    color: "rgba(255, 255, 255, 0.8)",
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+  },
 });

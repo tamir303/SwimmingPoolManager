@@ -160,7 +160,7 @@ const MainScreen: React.FC = () => {
           new StartAndEndTime(adjustStartTime, adjustEndTime),
           []
         );
-        await createLesson(newLesson, day);
+        await createLesson(newLesson, Object.values(DaysOfWeek).indexOf(selectedLessonDay));
         showAlert("Lesson Created!");
       }
       fetchLessons();
@@ -207,7 +207,7 @@ const MainScreen: React.FC = () => {
             <Text style={styles.cardText}>Instructor: {instructorName}</Text>
           </View>
           <Text style={styles.cardText}>
-            Specialties: {item.specialties.map(formatSpecialty).join(", ")}
+            <Icon name="swimmer" size={18} color="#7F8C8D"/> Specialties: {item.specialties.map(formatSpecialty).join(", ")}
           </Text>
           <View style={styles.lessonStatusContainer}>
             <View style={[styles.lessonStatusBadge, { backgroundColor: statusColor }]}>

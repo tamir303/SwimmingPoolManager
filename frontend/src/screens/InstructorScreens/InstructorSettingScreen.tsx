@@ -23,46 +23,38 @@ import Instructor from "../../dto/instructor/instructor.dto";
 import InstructorService from "../../services/instructor.service";
 import Footer from "../../components/Footer";
 import useAlert from "../../hooks/useAlert";
+import Icon from "react-native-vector-icons/FontAwesome"; // For icons
 
-// Helper: Format a swimming type string (e.g., "BACK_STROKE" -> "Back stroke")
 const formatSpecialty = (specialty: string): string => {
   const lower = specialty.toLowerCase().replace(/_/g, " ");
   return lower.charAt(0).toUpperCase() + lower.slice(1);
 };
 
+const formatDate = (date: Date): Date => {
+  const fdate = new Date(date)
+  fdate.setSeconds(0)
+  fdate.setMilliseconds(0)
+  return fdate
+}
+
 const InstructorScreen: React.FC = () => {
   const { user } = useAuth();
-  const { showAlert } = useAlert()
+  const { showAlert } = useAlert();
   const navigation = useNavigation();
   const { updateInstructor } = useInstructors();
 
-  // Global (saved) instructor data.
   const [userInstructor, setUserInstructor] = useState<Instructor | null>(null);
-
-  // Global state from useInstructorForm (saved values)
-  const {
-    name,
-    setName,
-    specialties,
-    setSpecialties,
-    availabilities,
-    setAvailabilities,
-    availableDays,
-    setAvailableDays,
-  } = useInstructorForm();
-
-  // Temporary state for unsaved changes.
+  const { name, setName, specialties, setSpecialties, availabilities, setAvailabilities, availableDays, setAvailableDays } = useInstructorForm();
   const [tempSpecialties, setTempSpecialties] = useState<Swimming[]>([]);
   const [tempAvailabilities, setTempAvailabilities] = useState<Availability[]>(new Array(7).fill(-1));
   const [tempAvailableDays, setTempAvailableDays] = useState<DaysOfWeek[]>(Object.values(DaysOfWeek));
   const [tempSelectedDay, setTempSelectedDay] = useState<DaysOfWeek | null>(null);
   const [tempAvailableSpecialties, setTempAvailableSpecialties] = useState<Swimming[]>([]);
 
-  // Fetch instructor data on mount.
   useEffect(() => {
     const fetchData = async () => {
       if (user && user.id) {
-        console.log(`Fetching user ${user.id}`)
+        console.log(`Fetching user ${user.id}`);
         const instructorData = await InstructorService.getInstructorById(user.id);
         setUserInstructor(instructorData);
       }
@@ -70,94 +62,56 @@ const InstructorScreen: React.FC = () => {
     fetchData();
   }, [user]);
 
-  // When instructor data is fetched, initialize both global and temporary state.
   useEffect(() => {
     if (userInstructor) {
       setName(userInstructor.name);
       setSpecialties(userInstructor.specialties);
       setAvailabilities(userInstructor.availabilities);
-      const newAvailableDays = Object.values(DaysOfWeek).filter((day, idx) => {
-        return userInstructor.availabilities[idx] === -1;
-      });
+      const newAvailableDays = Object.values(DaysOfWeek).filter((day, idx) => userInstructor.availabilities[idx] === -1);
       setAvailableDays(newAvailableDays);
-
-      // Initialize temporary state with saved values.
       setTempSpecialties(userInstructor.specialties);
-      if (userInstructor.availabilities && userInstructor.availabilities.length === 7) {
-        setTempAvailabilities(userInstructor.availabilities);
-      } else {
-        setTempAvailabilities(new Array(7).fill(-1));
-      }
+      setTempAvailabilities(userInstructor.availabilities.length === 7 ? userInstructor.availabilities : new Array(7).fill(-1));
       setTempAvailableDays(newAvailableDays);
       setTempSelectedDay(null);
-
-      // Initialize temporary available swimming types.
-      const allSpecialties = Object.values(Swimming);
-      setTempAvailableSpecialties(
-        allSpecialties.filter((s) => !userInstructor.specialties.includes(s))
-      );
+      setTempAvailableSpecialties(Object.values(Swimming).filter((s) => !userInstructor.specialties.includes(s)));
     } else {
-      // If no instructor data, initialize defaults.
       setTempAvailabilities(new Array(7).fill(-1));
       setTempAvailableDays(Object.values(DaysOfWeek));
     }
   }, [userInstructor, setName, setSpecialties, setAvailabilities, setAvailableDays]);
 
-  // Recalculate available swimming types whenever tempSpecialties changes.
   useEffect(() => {
-    const allSpecialties = Object.values(Swimming);
-    setTempAvailableSpecialties(
-      allSpecialties.filter((s) => !tempSpecialties.includes(s))
-    );
+    setTempAvailableSpecialties(Object.values(Swimming).filter((s) => !tempSpecialties.includes(s)));
   }, [tempSpecialties]);
 
   useEffect(() => {
-    // Compute all days that are cancelled (i.e. availability equals -1)
-    const cancelledDays = Object.values(DaysOfWeek).filter((day, idx) => {
-      return tempAvailabilities[idx] === -1;
-    });
-    // Only update if there's a change to avoid unnecessary re-renders.
+    const cancelledDays = Object.values(DaysOfWeek).filter((day, idx) => tempAvailabilities[idx] === -1);
     if (cancelledDays.length !== tempAvailableDays.length) {
       setTempAvailableDays(cancelledDays);
     }
   }, [tempAvailabilities]);
-  
 
   const checkIfValid = (): boolean => {
     const { valid, message } = isInstructorValid(name, tempSpecialties, tempAvailableDays);
-    if (message) showAlert(message)
+    if (message) showAlert(message);
     return valid;
   };
 
   const handleSaveChanges = async () => {
-    const data = {
-      name: name,
-      specialties: tempSpecialties,
-      availabilities: tempAvailabilities
-    }
-    console.log(data)
-
-    if (!checkIfValid()) {
-      console.log("Data invalid. Please check required fields.");
-      return;
-    }
+    const data = { name, specialties: tempSpecialties, availabilities: tempAvailabilities };
+    if (!checkIfValid()) return;
     try {
       if (userInstructor && userInstructor.id) {
-        await updateInstructor({
-          id: userInstructor.id,
-          data: { name: name, specialties: tempSpecialties, availabilities: tempAvailabilities },
-        });
+        await updateInstructor({ id: userInstructor.id, data });
       }
-
-      // Commit temporary changes to global state.
       setSpecialties(tempSpecialties);
       setAvailableDays(tempAvailableDays);
-      setAvailabilities(tempAvailabilities)
-      console.log("Saved instructor data!");
-      
+      setAvailabilities(tempAvailabilities);
+      showAlert("Profile updated successfully!");
       setTempSelectedDay(null);
     } catch (err) {
       console.error("Error saving data:", err);
+      showAlert("Failed to save profile!");
     }
   };
 
@@ -165,30 +119,21 @@ const InstructorScreen: React.FC = () => {
     navigation.goBack();
   };
 
-  // Updated handleToggleDay: Allows multiple days to be active.
   const handleToggleDay = (day: DaysOfWeek) => {
     const dayIndex = Object.values(DaysOfWeek).indexOf(day);
     const currentValue = tempAvailabilities[dayIndex];
-
-    // Simply toggle the day without affecting others.
     if (currentValue === -1) {
-      // Toggle on: set default time range.
       const newAvail = [...tempAvailabilities];
       newAvail[dayIndex] = { startTime: new Date(), endTime: new Date() };
       setTempAvailabilities(newAvail);
       setTempAvailableDays((prev) => prev.filter((d) => d !== day));
-      // Set this day as active (for showing time pickers).
       setTempSelectedDay(day);
     } else {
-      // Toggle off.
       const newAvail = [...tempAvailabilities];
       newAvail[dayIndex] = -1;
       setTempAvailabilities(newAvail);
       setTempAvailableDays((prev) => sortDays([...prev, day]));
-      // If this day was active, remove it.
-      if (tempSelectedDay === day) {
-        setTempSelectedDay(null);
-      }
+      if (tempSelectedDay === day) setTempSelectedDay(null);
     }
   };
 
@@ -212,116 +157,112 @@ const InstructorScreen: React.FC = () => {
     }
   };
 
-  // Compute active days (all days where tempAvailabilities is not -1).
-  const activeDays = Object.values(DaysOfWeek).filter((day, idx) => {
-    return tempAvailabilities[idx] !== -1;
-  });  
+  const activeDays = Object.values(DaysOfWeek).filter((day, idx) => tempAvailabilities[idx] !== -1);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.header}>
+        <Text style={styles.headerText}>Profile Settings</Text>
+      </View>
       <View style={styles.container}>
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Profile Settings</Text>
-        </View>
-
-        <ScrollView style={styles.content} contentContainerStyle={{ paddingBottom: 120 }}>
-          {/* Current Settings (Global Data) */}
-          <Text style={styles.sectionTitle}>Current Settings</Text>
+        <ScrollView style={styles.content}>
+          {/* Current Settings */}
+          <Text style={styles.sectionTitle}>
+            <Icon name="info-circle" size={18} color="#34495E" /> Current Settings
+          </Text>
           {userInstructor ? (
             <View style={styles.currentSettingsContainer}>
               <Text style={styles.currentSettingsText}>
-                Name: {name}
+                <Icon name="user" size={16} color="#6C63FF" /> Name: {name}
               </Text>
-              {
-                availabilities.every((availability) => availability === -1) ? (
-                  <Text style={styles.currentSettingsText}>No Availabilities Set Yet!</Text>
-                ) : (
-                  availabilities.map((availability, idx) => {
-                    if (availability === -1) return null;
-                    const day = Object.values(DaysOfWeek)[idx];
-                    return (
-                      <Text style={styles.currentSettingsText} key={day}>
-                        {day}: {new Date(availability.startTime).toLocaleTimeString()} -{" "}
-                        {new Date(availability.endTime).toLocaleTimeString()}
-                      </Text>
-                    );
-                  })
-                )
-              }
+              {availabilities.every((availability) => availability === -1) ? (
+                <Text style={styles.emptyText}>No Availabilities Set Yet!</Text>
+              ) : (
+                availabilities.map((availability, idx) => {
+                  if (availability === -1) return null;
+                  const day = Object.values(DaysOfWeek)[idx];
+                  return (
+                    <Text style={styles.currentSettingsText} key={day}>
+                      <Icon name="calendar" size={16} color="#6C63FF" /> {day}:{" "}
+                      {new Date(formatDate(availability.startTime)).toLocaleTimeString()} -{" "}
+                      {new Date(formatDate(availability.endTime)).toLocaleTimeString()}
+                    </Text>
+                  );
+                })
+              )}
               {specialties.length > 0 ? (
                 <Text style={styles.currentSettingsText}>
-                    Specialties:{" "}
+                  Specialties:{" "}
                   {specialties.map(formatSpecialty).join(", ")}
                 </Text>
               ) : (
-                <Text style={styles.currentSettingsText}>
-                  No Specialities Set Yet!
-                </Text>
+                <Text style={styles.emptyText}>No Specialties Set Yet!</Text>
               )}
             </View>
           ) : (
-            <Text style={styles.currentSettingsText}>Loading current settings...</Text>
+            <Text style={styles.emptyText}>Loading current settings...</Text>
           )}
 
-          {/* Availability Section (Temporary State) */}
-          <Text style={styles.sectionTitle}>Set Your Availability</Text>
+          {/* Availability Section */}
+          <Text style={styles.sectionTitle}>
+            <Icon name="clock-o" size={18} color="#34495E" /> Set Your Availability
+          </Text>
           <View style={styles.daysGrid}>
-            {availableDays.map((day) => (
-              <View key={day} style={styles.dayBox}>
+            {Object.values(DaysOfWeek).map((day) => (
+              <TouchableOpacity
+                key={day}
+                style={[
+                  styles.dayBox,
+                  tempAvailabilities[Object.values(DaysOfWeek).indexOf(day)] !== -1 && styles.dayBoxActive,
+                ]}
+                onPress={() => handleToggleDay(day)}
+              >
                 <Text style={styles.dayLabel}>{formatSpecialty(day)}</Text>
                 <Switch
-                  value={
-                    tempAvailabilities[Object.values(DaysOfWeek).indexOf(day)] !== -1
-                  }
+                  value={tempAvailabilities[Object.values(DaysOfWeek).indexOf(day)] !== -1}
                   onValueChange={() => handleToggleDay(day)}
+                  trackColor={{ false: "#DDD", true: "#6C63FF" }}
+                  thumbColor="#FFF"
                 />
-              </View>
+              </TouchableOpacity>
             ))}
           </View>
 
-          {/* For each active day, render its time picker section */}
+          {/* Active Days Time Pickers */}
           {activeDays.map((day) => {
-            const dayIndex = Object.values(DaysOfWeek).indexOf(day)
+            const dayIndex = Object.values(DaysOfWeek).indexOf(day);
             return (
               <View key={day} style={styles.timePickerSection}>
-                {/* X icon to disable this day */}
-                <TouchableOpacity 
-                  style={styles.removeIcon} 
-                  onPress={() => handleToggleDay(day)}
-                >
-                  <Text style={styles.removeIconText}>X</Text>
+                <TouchableOpacity style={styles.removeIcon} onPress={() => handleToggleDay(day)}>
+                  <Icon name="times" size={16} color="#FFF" />
                 </TouchableOpacity>
-
-                <Text style={styles.sectionTitle}>Set Time for {day}</Text>
+                <Text style={styles.timePickerTitle}>{formatSpecialty(day)}</Text>
                 <View style={styles.timePickerRow}>
                   <View style={styles.timePickerItem}>
-                  <Text style={styles.timePickersLabel}>Available From</Text>
-                  <TimePicker
-                    label="From"
-                    value={typeof tempAvailabilities[dayIndex] === "object" && tempAvailabilities[dayIndex]?.startTime || new Date()}
-                    onTimeSelected={(time) =>
-                      handleUpdateDayRange(day, time, undefined)
-                    }
-                  />
+                    <Text style={styles.timePickersLabel}>From</Text>
+                    <TimePicker
+                      label="From"
+                      value={typeof tempAvailabilities[dayIndex] === "object" && tempAvailabilities[dayIndex]?.startTime || new Date()}
+                      onTimeSelected={(time) => handleUpdateDayRange(day, time, undefined)}
+                    />
                   </View>
-                    <View style={styles.timePickerItem}>
-                      <Text style={styles.timePickersLabel}>Available Until</Text>
-                      <TimePicker
+                  <View style={styles.timePickerItem}>
+                    <Text style={styles.timePickersLabel}>Until</Text>
+                    <TimePicker
                       label="Until"
                       value={typeof tempAvailabilities[dayIndex] === "object" && tempAvailabilities[dayIndex]?.endTime || new Date()}
-                      onTimeSelected={(time) =>
-                        handleUpdateDayRange(day, undefined, time)
-                      }
-                      />
-                    </View>
+                      onTimeSelected={(time) => handleUpdateDayRange(day, undefined, time)}
+                    />
                   </View>
+                </View>
               </View>
-              );
-            })}
+            );
+          })}
 
-          {/* Swimming Types Section (Temporary State) */}
-          <Text style={styles.sectionTitle}>Select Swimming Types</Text>
+          {/* Swimming Types Section */}
+          <Text style={styles.sectionTitle}>
+            Select Swimming Types
+          </Text>
           <View style={styles.swimWrap}>
             {tempAvailableSpecialties.map((specialty) => (
               <TouchableOpacity
@@ -341,8 +282,9 @@ const InstructorScreen: React.FC = () => {
                 style={styles.swimRowItem}
                 onPress={() => handleToggleSpecialty(specialty)}
               >
-                <Text style={styles.swimRowItemText}>{formatSpecialty(specialty)}</Text>
-                <Text style={styles.swimRowItemIcon}>✓</Text>
+                <Text style={styles.swimRowItemText}>
+                  <Icon name="check" size={16} color="#4CAF50" /> {formatSpecialty(specialty)}
+                </Text>
               </TouchableOpacity>
             ))}
           </View>
@@ -357,8 +299,8 @@ const InstructorScreen: React.FC = () => {
             </Button>
           </View>
         </ScrollView>
-
-        {/* Footer */}
+      </View>
+      <View style={styles.footerContainer}>
         <Footer navigation={navigation} />
       </View>
     </SafeAreaView>

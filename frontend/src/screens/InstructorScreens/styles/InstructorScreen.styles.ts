@@ -222,4 +222,12 @@ export default StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: "#E0E0E0",
   },
+  input: {
+    backgroundColor: "#FFF",
+    padding: 10,
+    borderRadius: 8,
+    borderColor: "#DDD",
+    borderWidth: 1,
+    marginBottom: 15,
+  },
 });

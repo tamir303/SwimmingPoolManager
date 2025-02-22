@@ -14,8 +14,9 @@ export const useStudent = () => {
   }
 
   const fetchStudent = async (studentId: string) => {
-    const data = await StudentService.getStudentById(studentId);
+    const data: Student = await StudentService.getStudentById(studentId);
     setStudent(data);
+    return data
   };
 
   const updateStudent = async (studentId: string, data: Partial<Student>) => {
@@ -27,11 +28,13 @@ export const useStudent = () => {
   const fetchMyLessons = async (studentId: string) => {
     const lessons = await StudentService.getMyLessons(studentId);
     setMyLessons(lessons);
+    return lessons;
   };
 
   const fetchAvailableLessons = async (studentId: string) => {
     const lessons = await StudentService.getAvailableLessons(studentId);
     setAvailableLessons(lessons);
+    return lessons;
   };
 
   const joinLesson = async (studentId: string, lessonId: string) => {

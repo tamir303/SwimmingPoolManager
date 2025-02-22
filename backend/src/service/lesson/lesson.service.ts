@@ -15,9 +15,8 @@ import LessonServiceInterface from "./ILesson.service.js";
 import compareTime from "../../utils/compare-hours.utils.js";
 import { createCustomLogger } from "../../etc/logger.etc.js";
 import Student from "../../dto/student/student.dto.js";
-import StudentService from "../student/student.service.js";
-import StudentServiceInterface from "../student/IStudent.service.js";
-import { log } from "console";
+import StudentRepositoryInterface from "../../repository/student/IStudent.repository.js";
+import StudentRepository from "../../repository/student/student.repository.js";
 
 // Initialize logger
 const logger = createCustomLogger({
@@ -35,12 +34,12 @@ const logger = createCustomLogger({
 export default class LessonService implements LessonServiceInterface {
   private lessonRepository: LessonRepositoryInterface;
   private instructorService: InstructorServiceInterface;
-  private studentService: StudentServiceInterface;
+  private studentRepository: StudentRepositoryInterface;
 
   constructor() {
     this.lessonRepository = new LessonRepository();
     this.instructorService = new InstructorService();
-    this.studentService = new StudentService();
+    this.studentRepository = new StudentRepository();
   }
 
   /**
@@ -71,7 +70,7 @@ export default class LessonService implements LessonServiceInterface {
 
       await Promise.all(
         lessonData.students.map((student) =>
-          this.studentService.getStudentById(student.id)
+          this.studentRepository.findById(student.id)
         )
       ); 
      
@@ -288,7 +287,7 @@ export default class LessonService implements LessonServiceInterface {
       await this.instructorService.getInstructorById(lessonData.instructorId); // must be valid otherwise it will throw an exception
 
     lessonData.students.map(async (student) => 
-      await this.studentService.getStudentById(student.id) // must be valid otherwise it will throw an exception
+      await this.studentRepository.findById(student.id) // must be valid otherwise it will throw an exception
     )
 
     if (

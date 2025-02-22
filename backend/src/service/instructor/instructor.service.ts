@@ -9,6 +9,7 @@ import { createCustomLogger } from "../../etc/logger.etc.js";
 import LessonRepositoryInterface from "../../repository/lesson/ILesson.repository.js";
 import LessonRepository from "../../repository/lesson/lesson.repository.js";
 import { Availability } from "../../dto/instructor/start-and-end-time.dto.js";
+import { DaysOfWeek } from "../../utils/days-week-enum.utils.js";
 
 // Initialize the logger
 const logger = createCustomLogger({
@@ -234,6 +235,43 @@ export default class InstructorService implements InstructorServiceInterface {
     const instructor = await this.getInstructorById(id);
 
     this.validateInstructorData(instructorData);
+
+    const instructorLessons = await this.lessonRepository.getInstructorLessons(id);
+    // Check that the new availabilities and specialties do not conflict with existing lessons
+    for (const lesson of instructorLessons) {
+      // Determine the day index (0 = Sunday, 6 = Saturday) of the lesson
+      const lessonDay = lesson.startAndEndTime.startTime.getDay();
+      const newAvailability = instructorData.availabilities[lessonDay];
+        // Check if the lesson's time fits within the new availability window
+        if (newAvailability === -1) {
+          throw new createHttpError.BadRequest(
+            `Conflict: Existing lesson ${lesson.lessonId} on ${Object.values(DaysOfWeek)[lessonDay]}, cannot remove availability on a same day of an existing lesson.`
+          );
+        }
+
+        if (typeof newAvailability === "object" && (
+          (lesson.startAndEndTime.startTime < newAvailability.startTime) ||
+          (lesson.startAndEndTime.endTime > newAvailability.endTime))
+        ) {
+          throw new createHttpError.BadRequest(
+            `Conflict: Existing lesson ${lesson.lessonId} on ${Object.values(DaysOfWeek)[lessonDay]} does not fit within the new availability window (${newAvailability.startTime.toLocaleTimeString()} - ${newAvailability.endTime.toLocaleTimeString()}).`
+          );
+      }
+
+      // Check specialties: Each specialty required by the lesson must be present in the updated specialties
+      for (const specialty of lesson.specialties) {
+        if (!instructorData.specialties.includes(specialty)) {
+          throw new createHttpError.BadRequest(
+            `Conflict: Existing lesson ${lesson.lessonId} requires specialty ${specialty}, which is missing in the updated specialties.`
+          );
+        }
+      }
+
+      if (lesson.lessonId)
+        await this.lessonRepository
+          .updateLesson(lesson.lessonId, { ...lesson, specialties: instructorData.specialties });
+    }
+
 
     const updatedInstructor: Instructor = {
       id,

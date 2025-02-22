@@ -48,11 +48,11 @@ static async loginStudent(id: string, password: string): Promise<Student> {
   }
 
   static async joinLesson(studentId: string, lessonId: string): Promise<any> {
-    return this.requestWrapper(() =>axios.post(`${BASE_URL}/${studentId}/join`, { lessonId }).then((res) => res.data));
+    return this.requestWrapper(() =>axios.put(`${BASE_URL}/join/${studentId}/${lessonId}`).then((res) => res.data));
   }
 
   static async leaveLesson(studentId: string, lessonId: string): Promise<any> {
-    return this.requestWrapper(() =>axios.post(`${BASE_URL}/${studentId}/leave`, { lessonId }).then((res) => res.data));
+    return this.requestWrapper(() =>axios.put(`${BASE_URL}/leave/${studentId}/${lessonId}`).then((res) => res.data));
   }
 
   static async getAvailableLessons(studentId: string): Promise<Lesson[]> {

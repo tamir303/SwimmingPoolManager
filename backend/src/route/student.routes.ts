@@ -204,4 +204,25 @@ studentRouter.delete("/:id", async (req: Request, res: Response) => {
   studentController.deleteStudent(req, res);
 });
 
+
+studentRouter.put("/join/:studentId/:lessonId", async (req: Request, res: Response) => {
+  studentController.joinLesson(req, res);
+});
+
+
+studentRouter.put("/leave/:studentId/:lessonId", async (req: Request, res: Response) => {
+  studentController.leaveLesson(req, res);
+});
+
+
+studentRouter.get("/:id/available-lessons", async (req: Request, res: Response) => {
+  studentController.getAvailableLessons(req, res);
+});
+
+
+studentRouter.get("/:id/my-lessons", async (req: Request, res: Response) => {
+  studentController.getMyLessons(req, res);
+});
+
+
 export default studentRouter;

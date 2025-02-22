@@ -46,11 +46,11 @@ const RegisterLoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       
       try {
         if (status === "Register") {
-          await register(name, phone, password, role);
+          register(name, phone, password, role);
           navigation.navigate(`${role}SettingScreen`);
         } else {
-          await login(phone, password);
-          navigation.navigate(`${isInstructor ? "Student" : "Instructor"}MainScreen`);
+          const userType: string = await login(phone, password);
+          navigation.navigate(`${userType}MainScreen`);
         }
       } catch (error) {
         showAlert(String(error))

@@ -30,7 +30,7 @@ import StudentService from "../services/student.service";
    */
   interface AuthContextProps {
     user: AuthUser | null;
-    login: (phone: string, password: string) => Promise<void>;
+    login: (phone: string, password: string) => Promise<UserType>;
     register: (
       name: string,
       phone: string,
@@ -46,7 +46,7 @@ import StudentService from "../services/student.service";
    */
   const AuthContext = createContext<AuthContextProps>({
     user: null,
-    login: async () => {},
+    login: async () => "Instructor",
     register: async () => {},
     logout: () => {},
     isInstructor: false,
@@ -72,7 +72,7 @@ import StudentService from "../services/student.service";
     const login = async (
       phone: string,
       password: string,
-    ): Promise<void> => {
+    ): Promise<UserType> => {
       var flag = true
       try {
         await StudentService.getStudentById(phone);
@@ -90,6 +90,8 @@ import StudentService from "../services/student.service";
             name: studentData.name,
             userType: "Student",
           });
+          
+          return "Student"
         } else {
           // No student found: assume it's an instructor.
           const instructorData: Instructor = await InstructorService.loginInstructor(phone, password);
@@ -98,6 +100,8 @@ import StudentService from "../services/student.service";
             name: instructorData.name,
             userType: "Instructor",
           });
+
+          return "Instructor"
         }
     
         // Optionally: store token in AsyncStorage, Redux, or similar.
@@ -118,6 +122,20 @@ import StudentService from "../services/student.service";
       password: string,
       userType: UserType
     ): Promise<void> => {
+      try {
+        await InstructorService.getInstructorById(phone);
+        throw Error("Register error: user with that phone number already exist!");
+      } catch (error) {
+        // User doesn't exist, can continue
+      }
+
+      try {
+        await StudentService.getStudentById(phone);
+        throw Error("Register error: user with that phone number already exist!");
+      } catch (error) {
+        // User doesn't exist, can continue
+      }
+
       try {
         // For demonstration, let's say if userType is "instructor",
         // we create them via InstructorService:

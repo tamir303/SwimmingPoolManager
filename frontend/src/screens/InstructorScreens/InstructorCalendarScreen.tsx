@@ -17,6 +17,7 @@ import Icon from "react-native-vector-icons/FontAwesome";
 import styles from "./styles/CalenderScreen.styles";
 import CustomModal from "../../components/Modal";
 import Student from "../../dto/student/student.dto";
+import useAlert from "../../hooks/useAlert";
 
 const HOUR_HEIGHT = 60; // Height per hour
 const START_HOUR = 8; // 8 AM
@@ -41,6 +42,7 @@ const CalendarScreen: React.FC = () => {
   const { user } = useAuth();
   const { getLessonsWithinRange } = useLesson();
   const { getInstructorById, instructors, fetchInstructors } = useInstructors();
+  const { showAlert } = useAlert(); // Added useAlert hook
   const navigation = useNavigation();
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
@@ -54,22 +56,31 @@ const CalendarScreen: React.FC = () => {
   });
 
   const fetchData = async (start: Date, end: Date) => {
+    console.log(`Fetching data for range: ${start} to ${end}`);
     try {
       const fetchedLessons: Lesson[] = await getLessonsWithinRange(start, end);
       const fetchedInstructors: Instructor[] = await fetchInstructors();
+      console.log("Fetched lessons:", fetchedLessons);
+      console.log("Fetched instructors:", fetchedInstructors);
       setLessons(fetchedLessons);
       setAllInstructors(fetchedInstructors);
       setWeekRange({ start, end });
+      showAlert("Lessons and instructors loaded successfully!");
     } catch (error) {
       console.error("Error fetching lessons:", error);
+      showAlert("Failed to load lessons. Please try again.");
     }
 
     if (user?.id && !userInstructor) {
       try {
+        console.log(`Fetching instructor for user ID: ${user.id}`);
         const instructor: Instructor = await getInstructorById(user.id);
+        console.log("Fetched user instructor:", instructor);
         setUserInstructor(instructor);
+        showAlert(`Loaded instructor profile: ${instructor.name}`);
       } catch (error) {
         console.error("Error fetching instructor:", error);
+        showAlert("Failed to load your instructor profile.");
       }
     }
   };
@@ -84,6 +95,7 @@ const CalendarScreen: React.FC = () => {
     saturday.setDate(sunday.getDate() + 6);
     saturday.setHours(23, 59, 59, 999);
 
+    console.log("Initial week range:", { start: sunday, end: saturday });
     fetchData(sunday, saturday);
   }, [user]);
 
@@ -93,6 +105,7 @@ const CalendarScreen: React.FC = () => {
     const newEnd = new Date(newStart);
     newEnd.setDate(newEnd.getDate() + 6);
     newEnd.setHours(23, 59, 59, 999);
+    console.log("Navigating to previous week:", { start: newStart, end: newEnd });
     fetchData(newStart, newEnd);
   };
 
@@ -102,6 +115,7 @@ const CalendarScreen: React.FC = () => {
     const newEnd = new Date(newStart);
     newEnd.setDate(newEnd.getDate() + 6);
     newEnd.setHours(23, 59, 59, 999);
+    console.log("Navigating to next week:", { start: newStart, end: newEnd });
     fetchData(newStart, newEnd);
   };
 
@@ -114,6 +128,7 @@ const CalendarScreen: React.FC = () => {
   };
 
   const calculateLessonPositions = (): LessonWithPosition[] => {
+    console.log("Calculating lesson positions for lessons:", lessons);
     const lessonsByDay: { [dayIndex: number]: Lesson[] } = {};
 
     lessons.forEach((lesson) => {
@@ -173,6 +188,7 @@ const CalendarScreen: React.FC = () => {
       });
     });
 
+    console.log("Positioned lessons:", positionedLessons);
     return positionedLessons;
   };
 
@@ -185,7 +201,7 @@ const CalendarScreen: React.FC = () => {
       <ScrollView style={styles.studentTableContainer} horizontal>
         <View>
           <View style={styles.tableHeader}>
-            <Text style={[styles.tableHeaderCell, { width: 100 }]}>ID</Text>
+            <Text style={[styles.tableHeaderCell, { width: 100 }]}>Phone</Text>
             <Text style={[styles.tableHeaderCell, { width: 150 }]}>Name</Text>
             <Text style={[styles.tableHeaderCell, { width: 200 }]}>Preferences</Text>
           </View>
@@ -287,6 +303,12 @@ const CalendarScreen: React.FC = () => {
                 const height = (adjustedEndHour - adjustedStartHour) * HOUR_HEIGHT;
                 const left = dayIndex * DAY_WIDTH + lesson.offsetX;
 
+                console.log(`Rendering lesson ${lesson.lessonId}:`, {
+                  instructorId: lesson.instructorId,
+                  userInstructorId: userInstructor?.id,
+                  color: lesson.instructorId === userInstructor?.id ? "#6C63FF" : "#4CAF50",
+                });
+
                 return (
                   <TouchableOpacity
                     key={lesson.lessonId}
@@ -302,6 +324,7 @@ const CalendarScreen: React.FC = () => {
                       },
                     ]}
                     onPress={() => {
+                      console.log("Selected lesson:", lesson);
                       setSelectedLesson(lesson);
                       setModalVisible(true);
                     }}
@@ -331,6 +354,7 @@ const CalendarScreen: React.FC = () => {
           title={`${getInstructorNameById(selectedLesson.instructorId)} - ${formatSpecialty(selectedLesson.typeLesson)}`}
           visible={modalVisible}
           onClose={() => {
+            console.log("Closing modal");
             setSelectedLesson(null);
             setModalVisible(false);
           }}

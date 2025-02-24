@@ -106,8 +106,7 @@ import StudentService from "../services/student.service";
     
         // Optionally: store token in AsyncStorage, Redux, or similar.
       } catch (err) {
-        console.error("Login error:", err);
-        throw err;
+        throw Error(`User with phone number ${phone} doesn't exist!`);
       }
     };    
   

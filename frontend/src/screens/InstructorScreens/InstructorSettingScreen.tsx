@@ -192,7 +192,10 @@ const InstructorScreen: React.FC = () => {
         <Text style={styles.headerText}>Profile Settings</Text>
       </View>
       <View style={styles.container}>
-        <ScrollView style={styles.content}>
+        <ScrollView 
+          style={styles.content}
+          contentContainerStyle={{ paddingBottom: 80 }}
+        >
           {/* Current Settings */}
           <Text style={styles.sectionTitle}>
             <Icon name="info-circle" size={18} color="#34495E" /> Current Settings
@@ -269,6 +272,10 @@ const InstructorScreen: React.FC = () => {
           {/* Active Days Time Pickers */}
           {activeDays.map((day) => {
             const dayIndex = Object.values(DaysOfWeek).indexOf(day);
+            const availability = tempAvailabilities[dayIndex];
+            const startTime = availability !== -1 && availability?.startTime instanceof Date ? availability.startTime : new Date();
+            const endTime = availability !== -1 && availability?.endTime instanceof Date ? availability.endTime : new Date();
+
             return (
               <View key={day} style={styles.timePickerSection}>
                 <TouchableOpacity style={styles.removeIcon} onPress={() => handleToggleDay(day)}>
@@ -280,7 +287,7 @@ const InstructorScreen: React.FC = () => {
                     <Text style={styles.timePickersLabel}>From</Text>
                     <TimePicker
                       label="From"
-                      value={typeof tempAvailabilities[dayIndex] === "object" && tempAvailabilities[dayIndex]?.startTime || new Date()}
+                      value={startTime}
                       onTimeSelected={(time) => handleUpdateDayRange(day, time, undefined)}
                     />
                   </View>
@@ -288,7 +295,7 @@ const InstructorScreen: React.FC = () => {
                     <Text style={styles.timePickersLabel}>Until</Text>
                     <TimePicker
                       label="Until"
-                      value={typeof tempAvailabilities[dayIndex] === "object" && tempAvailabilities[dayIndex]?.endTime || new Date()}
+                      value={endTime}
                       onTimeSelected={(time) => handleUpdateDayRange(day, undefined, time)}
                     />
                   </View>

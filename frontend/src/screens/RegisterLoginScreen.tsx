@@ -38,6 +38,10 @@ const RegisterLoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
         showAlert("Error", "Phone number must start with '05'.");
         return;
       }
+      if (phone.length !== 10) {
+        showAlert("Error", "Phone number length must be equal to 10.");
+        return;
+      }
       // Validate password length (at least 6 characters)
       if (password.length < 6) {
         showAlert("Error", "Password must be at least 6 characters long.");

@@ -41,6 +41,13 @@ const formatDate = (date: Date): Date => {
   return fdate;
 };
 
+const formatDateDDMMYYYY = (date: Date): string => {
+  const day = String(date.getDate()).padStart(2, "0"); 
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+};
+
 const MainScreen: React.FC = () => {
   const { user } = useAuth();
   const { showAlert } = useAlert();
@@ -143,8 +150,6 @@ const MainScreen: React.FC = () => {
     const end = new Date(lesson.startAndEndTime.endTime).getTime()
     const start = new Date(lesson.startAndEndTime.startTime).getTime()
     if (end < Date.now() || (now >= start && now <= end)) {
-      console.log("Cannot edit completed or in progress lesson:", lesson);
-      showAlert("Cannot edit a completed or in progress lesson lesson.");
       return;
     }
     console.log("Opening edit modal for lesson:", lesson);
@@ -164,13 +169,6 @@ const MainScreen: React.FC = () => {
 
   const handleSaveLesson = async () => {
     if (!lessonType || !lessonStartTime || !lessonEndTime || !userInstructor || !selectedLessonDay) {
-      console.log("Missing required fields for saving lesson:", {
-        lessonType,
-        lessonStartTime,
-        lessonEndTime,
-        userInstructor,
-        selectedLessonDay,
-      });
       showAlert("One or more lesson fields are empty!");
       return;
     }
@@ -183,13 +181,11 @@ const MainScreen: React.FC = () => {
 
     try {
       if (selectedLesson) {
-        console.log("Updating lesson:", selectedLesson.lessonId);
         await updateLesson(selectedLesson.lessonId || "", {
           ...selectedLesson,
           typeLesson: lessonType,
           startAndEndTime: new StartAndEndTime(adjustStartTime, adjustEndTime),
         });
-        console.log("Lesson updated successfully");
         showAlert("Lesson Updated!");
       } else {
         const newLesson = new NewLesson(
@@ -199,16 +195,25 @@ const MainScreen: React.FC = () => {
           new StartAndEndTime(adjustStartTime, adjustEndTime),
           []
         );
-        console.log("Creating new lesson:", newLesson);
         await createLesson(newLesson, Object.values(DaysOfWeek).indexOf(selectedLessonDay));
-        console.log("Lesson created successfully");
         showAlert("Lesson Created!");
       }
       await fetchLessons();
       setModalVisible(false);
     } catch (err) {
-      console.error("Error saving lesson:", err);
-      showAlert("Failed to save lesson! Please try again.");
+      showAlert(`Failed to save lesson. ${err?.response.data.error || "Internal Error!"}`);
+    }
+  };
+
+  const handleDeleteLesson = async (lessonId: string) => {
+    try {
+      const updatedLessons = allLessons.filter((lesson) => lesson.lessonId !== lessonId);
+      setAllLessons(updatedLessons); 
+      await deleteLessonById(lessonId); 
+      showAlert("Lesson deleted successfully!");
+    } catch (error) {
+      await fetchLessons(); 
+      showAlert(`Failed to delete lesson. ${err?.response.data.error || "Internal Error!"}`);
     }
   };
 
@@ -257,7 +262,7 @@ const MainScreen: React.FC = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
-    const date = startTime.toLocaleDateString();
+    const date = startTime;
     const instructorName = getInstructorNameById(item.instructorId);
     const initial = instructorName.charAt(0).toUpperCase();
 
@@ -270,11 +275,11 @@ const MainScreen: React.FC = () => {
               style={styles.deleteIcon}
               onPress={() => {
                 if (item.lessonId)
-                  deleteLessonById(item.lessonId)
+                  handleDeleteLesson(item.lessonId)
                 }
               }
             >
-              <Icon name="trash" size={20} color="#F44336" />
+              <Icon name="trash" size={30} color="#F44336" />
             </TouchableOpacity>
           )}
 
@@ -293,7 +298,7 @@ const MainScreen: React.FC = () => {
               <Text style={styles.lessonStatusText}>{status}</Text>
             </View>
             <Text style={styles.lessonTime}>
-              <Icon name="clock-o" size={14} color="#7F8C8D" /> {date} | {startTimeStr} - {endTimeStr}
+              <Icon name="clock-o" size={14} color="#7F8C8D" /> {formatDateDDMMYYYY(date)} | {startTimeStr} - {endTimeStr}
             </Text>
           </View>
         </CustomCard>
@@ -387,6 +392,12 @@ const MainScreen: React.FC = () => {
               setActiveTab("MY");
             }}
           >
+            <Icon
+              name="book"
+              size={16}
+              color={activeTab === "MY" ? "#FFF" : "#666"}
+              style={{ marginRight: 5 }}
+            />
             <Text
               style={[
                 styles.toggleButtonText,
@@ -406,6 +417,12 @@ const MainScreen: React.FC = () => {
               setActiveTab("COMPLETED");
             }}
           >
+            <Icon
+              name="calendar-plus-o"
+              size={16}
+              color={activeTab === "COMPLETED" ? "#FFF" : "#666"}
+              style={{ marginRight: 5 }}
+            />
             <Text
               style={[
                 styles.toggleButtonText,
@@ -460,15 +477,15 @@ const MainScreen: React.FC = () => {
             <View style={styles.timePickerContainer}>
               <TimePicker
                 label="Start Time"
+                value={lessonStartTime || new Date() }
                 onTimeSelected={(time) => {
-                  console.log("Selected start time:", time);
                   setLessonStartTime(time);
                 }}
               />
               <TimePicker
                 label="End Time"
+                value={lessonEndTime || new Date()}
                 onTimeSelected={(time) => {
-                  console.log("Selected end time:", time);
                   setLessonEndTime(time);
                 }}
               />

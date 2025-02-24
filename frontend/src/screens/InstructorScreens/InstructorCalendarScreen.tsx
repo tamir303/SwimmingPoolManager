@@ -56,31 +56,22 @@ const CalendarScreen: React.FC = () => {
   });
 
   const fetchData = async (start: Date, end: Date) => {
-    console.log(`Fetching data for range: ${start} to ${end}`);
     try {
       const fetchedLessons: Lesson[] = await getLessonsWithinRange(start, end);
       const fetchedInstructors: Instructor[] = await fetchInstructors();
-      console.log("Fetched lessons:", fetchedLessons);
-      console.log("Fetched instructors:", fetchedInstructors);
       setLessons(fetchedLessons);
       setAllInstructors(fetchedInstructors);
       setWeekRange({ start, end });
-      showAlert("Lessons and instructors loaded successfully!");
     } catch (error) {
-      console.error("Error fetching lessons:", error);
-      showAlert("Failed to load lessons. Please try again.");
+      showAlert(`Failed to load lessons. ${error?.response.data.error || "Internal Error!"}`);
     }
 
     if (user?.id && !userInstructor) {
       try {
-        console.log(`Fetching instructor for user ID: ${user.id}`);
         const instructor: Instructor = await getInstructorById(user.id);
-        console.log("Fetched user instructor:", instructor);
         setUserInstructor(instructor);
-        showAlert(`Loaded instructor profile: ${instructor.name}`);
       } catch (error) {
-        console.error("Error fetching instructor:", error);
-        showAlert("Failed to load your instructor profile.");
+        showAlert(`Failed to user. ${error?.response.data.error || "Internal Error!"}`);
       }
     }
   };
@@ -95,7 +86,6 @@ const CalendarScreen: React.FC = () => {
     saturday.setDate(sunday.getDate() + 6);
     saturday.setHours(23, 59, 59, 999);
 
-    console.log("Initial week range:", { start: sunday, end: saturday });
     fetchData(sunday, saturday);
   }, [user]);
 
@@ -105,7 +95,6 @@ const CalendarScreen: React.FC = () => {
     const newEnd = new Date(newStart);
     newEnd.setDate(newEnd.getDate() + 6);
     newEnd.setHours(23, 59, 59, 999);
-    console.log("Navigating to previous week:", { start: newStart, end: newEnd });
     fetchData(newStart, newEnd);
   };
 

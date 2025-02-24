@@ -4,17 +4,17 @@ import DateTimePicker from "@react-native-community/datetimepicker";
 
 interface TimePickerProps {
   label?: string;
-  value?: Date;
+  value: Date;
   onTimeSelected: (time: Date) => void;
 }
 
 const TimePicker: React.FC<TimePickerProps> = ({ label, value, onTimeSelected }) => {
-  const [showPicker, setShowPicker] = useState(true);
-  const [selectedTime, setSelectedTime] = useState<Date>(new Date());
+  const [showPicker, setShowPicker] = useState(Platform.OS === "ios");
+  const [selectedTime, setSelectedTime] = useState<Date>(value || new Date());
 
   useEffect(() => {
-    if (value) {
-      setSelectedTime(value);
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      setSelectedTime(value); // Only update if value is a valid Date
     }
   }, [value]);
 

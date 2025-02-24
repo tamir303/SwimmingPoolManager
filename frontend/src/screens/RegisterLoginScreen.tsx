@@ -50,14 +50,15 @@ const RegisterLoginScreen: React.FC<{ navigation: any }> = ({ navigation }) => {
       
       try {
         if (status === "Register") {
-          register(name, phone, password, role);
-          navigation.navigate(`${role}SettingScreen`);
+          const result = await register(name, phone, password, role);
+          if (result)
+            navigation.navigate(`${role}SettingScreen`);
         } else {
           const userType: string = await login(phone, password);
           navigation.navigate(`${userType}MainScreen`);
         }
       } catch (error) {
-        showAlert(String(error))
+        showAlert(`${error?.response.data.error || "Internal Error!"}`)
       }
     };
 

@@ -8,6 +8,7 @@ import React, {
   import Instructor from "../dto/instructor/instructor.dto";
 import Student from "../dto/student/student.dto";
 import StudentService from "../services/student.service";
+import useAlert from "./useAlert";
   
   /**
    * Represents the user type in the system.
@@ -36,7 +37,7 @@ import StudentService from "../services/student.service";
       phone: string,
       password: string,
       userType: UserType
-    ) => Promise<void>;
+    ) => Promise<boolean>;
     logout: () => void;
     isInstructor: boolean;
   }
@@ -47,7 +48,7 @@ import StudentService from "../services/student.service";
   const AuthContext = createContext<AuthContextProps>({
     user: null,
     login: async () => "Instructor",
-    register: async () => {},
+    register: async () => true,
     logout: () => {},
     isInstructor: false,
   });
@@ -120,17 +121,20 @@ import StudentService from "../services/student.service";
       phone: string,
       password: string,
       userType: UserType
-    ): Promise<void> => {
+    ): Promise<boolean> => {
+      const { showAlert } = useAlert()
       try {
         await InstructorService.getInstructorById(phone);
-        throw Error("Register error: user with that phone number already exist!");
+        showAlert("Register error: user with that phone number already exist!")
+        return false
       } catch (error) {
         // User doesn't exist, can continue
       }
 
       try {
         await StudentService.getStudentById(phone);
-        throw Error("Register error: user with that phone number already exist!");
+        showAlert("Register error: user with that phone number already exist!")
+        return false
       } catch (error) {
         // User doesn't exist, can continue
       }
@@ -172,7 +176,8 @@ import StudentService from "../services/student.service";
             userType: "Student",
           });
         }
-        // In a real app, store token or relevant info here
+        
+        return true
       } catch (err) {
         console.error("Register error:", err);
         throw err;

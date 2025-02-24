@@ -1,13 +1,14 @@
 import React from 'react';
 import { View, StyleSheet, SafeAreaView, TouchableOpacity, Text } from 'react-native';
 import { useAuth } from '../hooks/authContext';
+import Icon from 'react-native-vector-icons/FontAwesome';
 
 interface FooterProps {
   navigation: any;
 }
 
 const Footer: React.FC<FooterProps> = ({ navigation }) => {
-  const { isInstructor } = useAuth();
+  const { isInstructor, logout } = useAuth();
 
   return (
     <SafeAreaView style={styles.footerContainer}>
@@ -16,19 +17,32 @@ const Footer: React.FC<FooterProps> = ({ navigation }) => {
           style={styles.footerButton} 
           onPress={() => navigation.navigate(isInstructor ? `InstructorMainScreen` : `StudentMainScreen`)}
         >
-          <Text style={styles.footerButtonText}>Home</Text>
+          <Icon name="home" size={24} color="#333" />
+          <Text style={[styles.footerButtonText, { marginTop: 5 }]}>Home</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.footerButton} 
           onPress={() => navigation.navigate(isInstructor ? "InstructorCalendarScreen" : "StudentCalendarScreen")}
         >
+          <Icon name="calendar" size={24} color="#333" />
           <Text style={styles.footerButtonText}>Calendar</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           style={styles.footerButton} 
           onPress={() => navigation.navigate(isInstructor ? "InstructorSettingScreen" : "StudentSettingScreen")}
         >
+          <Icon name="cog" size={24} color="#333" />
           <Text style={styles.footerButtonText}>Settings</Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={styles.footerButton} 
+          onPress={() => {
+            logout()
+            navigation.navigate("LoginRegisterScreen")
+          }}
+        >
+          <Icon name="sign-out" size={24} color="#333" />
+          <Text style={styles.footerButtonText}>Logout</Text>
         </TouchableOpacity>
       </View>
     </SafeAreaView>
@@ -53,7 +67,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    // No borderRadius for pointy corners
     backgroundColor: '#f8f8f8',
   },
   footerButtonText: {

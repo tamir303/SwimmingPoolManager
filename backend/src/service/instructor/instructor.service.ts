@@ -249,14 +249,22 @@ export default class InstructorService implements InstructorServiceInterface {
           );
         }
 
-        if (typeof newAvailability === "object" && (
-          (lesson.startAndEndTime.startTime < newAvailability.startTime) ||
-          (lesson.startAndEndTime.endTime > newAvailability.endTime))
-        ) {
+        if (!newAvailability || typeof newAvailability !== "object" || !newAvailability.startTime || !newAvailability.endTime) {
+          throw new createHttpError.BadRequest("Invalid new availability!");
+        }
+        
+        const lessonStart = new Date(lesson.startAndEndTime.startTime);
+        const lessonEnd = new Date(lesson.startAndEndTime.endTime);
+        const availStart = new Date(newAvailability.startTime);
+        const availEnd = new Date(newAvailability.endTime);
+
+        if (lessonStart.getHours() < availStart.getHours()
+           || lessonEnd.getHours() > availEnd.getHours()) {
+          const dayName = Object.values(DaysOfWeek)[lessonDay] || "Unknown Day";
           throw new createHttpError.BadRequest(
-            `Conflict: Existing lesson ${lesson.lessonId} on ${Object.values(DaysOfWeek)[lessonDay]} does not fit within the new availability window (${newAvailability.startTime.toLocaleTimeString()} - ${newAvailability.endTime.toLocaleTimeString()}).`
+            `Conflict: Existing lesson ${lesson.lessonId} on ${dayName} does not fit within the new availability window (${availStart.toLocaleTimeString()} - ${availEnd.toLocaleTimeString()}).`
           );
-      }
+        }
 
       // Check specialties: Each specialty required by the lesson must be present in the updated specialties
       for (const specialty of lesson.specialties) {

@@ -14,19 +14,12 @@ import { useInstructors } from "../../hooks/instructorHooks/useInstructors";
 import { useNavigation } from "@react-navigation/native";
 import Footer from "../../components/Footer";
 import Icon from "react-native-vector-icons/FontAwesome";
-import styles from "./styles/CalenderScreen.styles";
+import styles, {DAY_WIDTH, END_HOUR, FOOTER_HEIGHT, HOUR_BAR_WIDTH, HOUR_HEIGHT, START_HOUR, TOTAL_HOURS} from "./styles/CalenderScreen.styles";
 import CustomModal from "../../components/Modal";
 import Student from "../../dto/student/student.dto";
 import useAlert from "../../hooks/useAlert";
 
-const HOUR_HEIGHT = 60; // Height per hour
-const START_HOUR = 8; // 8 AM
-const END_HOUR = 22; // 10 PM
-const TOTAL_HOURS = END_HOUR - START_HOUR; // 14 hours
-const DAY_WIDTH = 150; // Width per day
-const MARGIN = 5; // Margin between lessons
-const HOUR_BAR_WIDTH = 50; // Width of the fixed hour bar
-const FOOTER_HEIGHT = 60; // Define footer height explicitly
+const MARGIN = 5;
 
 interface LessonWithPosition extends Lesson {
   adjustedWidth: number;
@@ -95,6 +88,7 @@ const CalendarScreen: React.FC = () => {
     const newEnd = new Date(newStart);
     newEnd.setDate(newEnd.getDate() + 6);
     newEnd.setHours(23, 59, 59, 999);
+    console.log("Navigating to previous week:", { start: newStart, end: newEnd });
     fetchData(newStart, newEnd);
   };
 
@@ -226,16 +220,6 @@ const CalendarScreen: React.FC = () => {
       </View>
 
       <View style={styles.chartContainer}>
-        {/* Fixed Hour Bar on the Left */}
-        <View style={styles.hourBar}>
-          {Array.from({ length: TOTAL_HOURS }).map((_, hourIndex) => (
-            <View key={hourIndex} style={styles.hourBarMarker}>
-              <Text style={styles.hourBarText}>
-                {START_HOUR + hourIndex}:00
-              </Text>
-            </View>
-          ))}
-        </View>
 
         {/* Scrollable Gantt Chart */}
         <ScrollView
@@ -248,6 +232,18 @@ const CalendarScreen: React.FC = () => {
             contentContainerStyle={{ width: DAY_WIDTH * 7 }}
             showsHorizontalScrollIndicator={false}
           >
+            {/* Fixed Hour Bar on the Left */}
+            <View style={[styles.hourBar, { marginRight: -42 }]}>
+              {Array.from({ length: TOTAL_HOURS }).map((_, hourIndex) => (
+                <View key={hourIndex} style={styles.hourBarMarker}>
+                  <Text style={styles.hourBarText}>
+                    {START_HOUR + hourIndex}:00
+                  </Text>
+                </View>
+              ))}
+            </View>
+            
+            {/* Gantt Chart */}
             <View style={[styles.calendarContainer, { marginLeft: HOUR_BAR_WIDTH }]}>
               {Array.from({ length: 7 }).map((_, dayIndex) => (
                 <View

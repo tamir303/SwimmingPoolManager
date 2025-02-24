@@ -56,16 +56,11 @@ const InstructorScreen: React.FC = () => {
     const fetchData = async () => {
       if (user && user.id) {
         try {
-          console.log(`Fetching instructor data for user ID: ${user.id}`);
           const instructorData = await InstructorService.getInstructorById(user.id);
           setUserInstructor(instructorData);
-          console.log("Instructor data fetched successfully:", instructorData);
         } catch (error) {
-          console.error("Error fetching instructor data:", error);
-          showAlert("Failed to load your profile. Please try again.");
+          showAlert(`Failed to load your profile. ${err?.response.data.error || "Internal Error!"}`);
         }
-      } else {
-        console.log("No user or user ID available to fetch instructor data.");
       }
     };
     fetchData();
@@ -73,7 +68,6 @@ const InstructorScreen: React.FC = () => {
 
   useEffect(() => {
     if (userInstructor) {
-      console.log("Setting initial form values from userInstructor:", userInstructor);
       setName(userInstructor.name);
       setSpecialties(userInstructor.specialties);
       setAvailabilities(userInstructor.availabilities);
@@ -85,21 +79,18 @@ const InstructorScreen: React.FC = () => {
       setTempSelectedDay(null);
       setTempAvailableSpecialties(Object.values(Swimming).filter((s) => !userInstructor.specialties.includes(s)));
     } else {
-      console.log("No userInstructor, resetting tempAvailabilities and tempAvailableDays.");
       setTempAvailabilities(new Array(7).fill(-1));
       setTempAvailableDays(Object.values(DaysOfWeek));
     }
   }, [userInstructor, setName, setSpecialties, setAvailabilities, setAvailableDays]);
 
   useEffect(() => {
-    console.log("Updating tempAvailableSpecialties based on tempSpecialties:", tempSpecialties);
     setTempAvailableSpecialties(Object.values(Swimming).filter((s) => !tempSpecialties.includes(s)));
   }, [tempSpecialties]);
 
   useEffect(() => {
     const cancelledDays = Object.values(DaysOfWeek).filter((day, idx) => tempAvailabilities[idx] === -1);
     if (cancelledDays.length !== tempAvailableDays.length) {
-      console.log("Updating tempAvailableDays based on tempAvailabilities:", cancelledDays);
       setTempAvailableDays(cancelledDays);
     }
   }, [tempAvailabilities]);
@@ -107,7 +98,6 @@ const InstructorScreen: React.FC = () => {
   const checkIfValid = (): boolean => {
     const { valid, message } = isInstructorValid(name, tempSpecialties, tempAvailableDays);
     if (!valid && message) {
-      console.log("Validation failed:", message);
       showAlert(message);
     }
     return valid;
@@ -115,29 +105,24 @@ const InstructorScreen: React.FC = () => {
 
   const handleSaveChanges = async () => {
     const data = { name, specialties: tempSpecialties, availabilities: tempAvailabilities };
-    console.log("Attempting to save changes:", data);
     if (!checkIfValid()) return;
     try {
       if (userInstructor && userInstructor.id) {
         await updateInstructor({ id: userInstructor.id, data });
-        console.log("Instructor profile updated successfully:", data);
         setSpecialties(tempSpecialties);
         setAvailableDays(tempAvailableDays);
         setAvailabilities(tempAvailabilities);
         showAlert("Profile updated successfully!");
         setTempSelectedDay(null);
       } else {
-        console.log("No userInstructor or ID available to update.");
         showAlert("Cannot save changes: Instructor ID missing.");
       }
     } catch (err) {
-      console.error("Error saving data:", err);
-      showAlert("Failed to save profile! Please try again.");
+      showAlert(`Failed to save profile! ${err?.response.data.error || "Internal Error!"}.`);
     }
   };
 
   const handleCancel = () => {
-    console.log("Cancel button pressed, navigating back.");
     navigation.goBack();
   };
 
@@ -150,14 +135,12 @@ const InstructorScreen: React.FC = () => {
       setTempAvailabilities(newAvail);
       setTempAvailableDays((prev) => prev.filter((d) => d !== day));
       setTempSelectedDay(day);
-      console.log(`Enabled day ${day}, new tempAvailabilities:`, newAvail);
     } else {
       const newAvail = [...tempAvailabilities];
       newAvail[dayIndex] = -1;
       setTempAvailabilities(newAvail);
       setTempAvailableDays((prev) => sortDays([...prev, day]));
       if (tempSelectedDay === day) setTempSelectedDay(null);
-      console.log(`Disabled day ${day}, new tempAvailabilities:`, newAvail);
     }
   };
 
@@ -171,16 +154,13 @@ const InstructorScreen: React.FC = () => {
       endTime: end || currentRange.endTime,
     };
     setTempAvailabilities(newAvail);
-    console.log(`Updated time range for ${day}:`, newAvail[dayIndex]);
   };
 
   const handleToggleSpecialty = (specialty: Swimming) => {
     if (tempSpecialties.includes(specialty)) {
       setTempSpecialties((prev) => prev.filter((s) => s !== specialty));
-      console.log(`Removed specialty ${specialty}, new tempSpecialties:`, tempSpecialties);
     } else {
       setTempSpecialties((prev) => [...prev, specialty]);
-      console.log(`Added specialty ${specialty}, new tempSpecialties:`, tempSpecialties);
     }
   };
 
@@ -240,7 +220,6 @@ const InstructorScreen: React.FC = () => {
             value={name}
             onChangeText={(text) => {
               setName(text);
-              console.log("Name updated to:", text);
             }}
           />
 
@@ -273,8 +252,8 @@ const InstructorScreen: React.FC = () => {
           {activeDays.map((day) => {
             const dayIndex = Object.values(DaysOfWeek).indexOf(day);
             const availability = tempAvailabilities[dayIndex];
-            const startTime = availability !== -1 && availability?.startTime instanceof Date ? availability.startTime : new Date();
-            const endTime = availability !== -1 && availability?.endTime instanceof Date ? availability.endTime : new Date();
+            const startTime = availability !== -1 && new Date(availability?.startTime) instanceof Date ? new Date(availability.startTime) : new Date();
+            const endTime = availability !== -1 && new Date(availability?.endTime) instanceof Date ? new Date(availability.endTime) : new Date();
 
             return (
               <View key={day} style={styles.timePickerSection}>

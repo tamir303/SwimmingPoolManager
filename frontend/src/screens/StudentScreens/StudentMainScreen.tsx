@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   View,
   Text,
@@ -53,16 +53,11 @@ const StudentMainScreen: React.FC = () => {
     const fetchStudentData = async () => {
       if (user && user.id && isFocused) {
         try {
-          console.log(`Fetching student data for user ID: ${user.id}`);
           const student: Student = await fetchStudent(user.id);
           setUserStudent(student);
-          console.log("Student data fetched successfully:", student);
         } catch (error) {
-          console.error("Error fetching student data:", error);
-          showAlert("Failed to fetch student data. Please try again.");
+          showAlert(`Failed to fetch student data. ${error?.response.data.error || "Internal Error!"}`);
         }
-      } else {
-        console.log("User or user ID missing, or screen not focused.");
       }
     };
 
@@ -70,22 +65,29 @@ const StudentMainScreen: React.FC = () => {
   }, [user, isFocused]);
 
   useEffect(() => {
+    const fetchMyLessonsData = async () => {
+      if (user && user.id) {
+        try {
+          const mylessons = await fetchMyLessons(user.id);
+          setAllMyLessons(mylessons);
+        } catch (error) {
+            console.log(`Failed to fetch lessons. ${error?.response.data.error || "Internal Error!"}`);
+        }
+      }
+    };
+
+    fetchMyLessonsData();
+  }, [user]);
+
+  useEffect(() => {
     const fetchLessonData = async () => {
       if (user && user.id) {
         try {
-          console.log(`Fetching lessons for student ID: ${user.id}`);
-          const mylessons =  await fetchMyLessons(user.id);
           const availablelessons =  await fetchAvailableLessons(user.id);
-          setAllMyLessons(mylessons);
           setAllAvailableLessons(availablelessons);
-          console.log("My Lessons:", allMyLessons);
-          console.log("Available Lessons:", allAvailableLessons);
         } catch (error) {
-          console.error("Error fetching lessons:", error);
-          showAlert("Failed to fetch lessons. Please try again.");
+            console.log(`Failed to fetch lessons. ${error?.response.data.error || "Internal Error!"}`);
         }
-      } else {
-        console.log("No userStudent available to fetch lessons.");
       }
     };
 
@@ -96,16 +98,12 @@ const StudentMainScreen: React.FC = () => {
     const fetchInstructorsData = async () => {
       if (user && user.id) {
         try {
-          console.log("Fetching instructors...");
           const instructors: Instructor[] = await fetchInstructors();
           setAllInstructors(instructors);
-          console.log("Instructors fetched successfully:", instructors);
         } catch (error) {
-          console.error("Error fetching instructors:", error);
-          showAlert("Failed to fetch instructors. Please try again.");
+          showAlert(`Failed to fetch instructors. ${error?.response.data.error || "Internal Error!"}`);
         }
       } else {
-        console.log("No userStudent available to fetch instructors.");
       }
     };
 
@@ -119,26 +117,20 @@ const StudentMainScreen: React.FC = () => {
       );
       return instructor ? instructor.name : "undefined";
     }
-    console.log("No instructors available to find name for ID:", id);
     return "undefined";
   };
 
   const handleLessonAction = async () => {
     try {
       if (userStudent?.id && selectedLesson?.lessonId) {
-        console.log(`Handling lesson action for student ID: ${userStudent.id}, lesson ID: ${selectedLesson.lessonId}`);
         if (activeTab === "MY_LESSONS") {
-          console.log("Attempting to leave lesson...");
           await leaveLesson(userStudent.id, selectedLesson.lessonId);
-          console.log("Lesson left successfully.");
           showAlert("You have successfully left the lesson!");
           setAllMyLessons((prev) =>
             prev.filter((lesson) => lesson.lessonId !== selectedLesson.lessonId)
           );
         } else {
-          console.log("Attempting to join lesson...");
           await joinLesson(userStudent.id, selectedLesson.lessonId);
-          console.log("Lesson joined successfully.");
           showAlert("You have successfully joined the lesson!");
           setAllAvailableLessons((prev) =>
             prev.filter((lesson) => lesson.lessonId !== selectedLesson.lessonId)
@@ -147,12 +139,10 @@ const StudentMainScreen: React.FC = () => {
         }
         setIsModalVisible(false); // Close modal after action
       } else {
-        console.log("Missing student ID or lesson ID.");
         showAlert("Student or lesson ID is missing!");
       }
     } catch (error) {
-      console.error(`Error during lesson action (${activeTab}):`, error);
-      showAlert(`Failed to ${activeTab === "MY_LESSONS" ? "leave" : "join"} the lesson. Please try again.`);
+      showAlert(`Failed to ${activeTab === "MY_LESSONS" ? "leave" : "join"} the lesson. ${error?.response.data.error || "Internal Error!"}`);
     }
   };
 
@@ -175,7 +165,6 @@ const StudentMainScreen: React.FC = () => {
         style={styles.card}
         title={`${item.typeLesson} Lesson`}
         onPress={() => {
-          console.log("Lesson selected:", item);
           setSelectedLesson(item);
           setIsModalVisible(true);
         }}
@@ -188,7 +177,7 @@ const StudentMainScreen: React.FC = () => {
           <Text style={styles.cardText}>Instructor: {instructorName}</Text>
         </View>
         <Text style={styles.cardText}>
-          <Icon name="swimmer" size={18} color="#7F8C8D" /> Specialties:{" "}
+          <Icon name="star" size={12} color="#7F8C8D" /> Specialties:{" "}
           {item.specialties.map(formatSpecialty).join(", ")}
         </Text>
         <View style={styles.lessonStatusContainer}>
@@ -199,6 +188,15 @@ const StudentMainScreen: React.FC = () => {
       </CustomCard>
     );
   };
+
+  const sortedLessons = useMemo(() => {
+    const lessons = activeTab === "MY_LESSONS" ? allMyLessons : allAvailableLessons;
+    return [...lessons].sort((a, b) => {
+      const startA = new Date(a.startAndEndTime.startTime).getTime();
+      const startB = new Date(b.startAndEndTime.startTime).getTime();
+      return startA - startB;
+    });
+  }, [activeTab, allMyLessons, allAvailableLessons]);
 
   const HeaderUserInfo = () => (
     <View style={styles.headerUserInfo}>
@@ -235,7 +233,6 @@ const StudentMainScreen: React.FC = () => {
               activeTab === "MY_LESSONS" && styles.activeToggleButton,
             ]}
             onPress={() => {
-              console.log("Switching to MY_LESSONS tab");
               setActiveTab("MY_LESSONS");
             }}
           >
@@ -260,7 +257,6 @@ const StudentMainScreen: React.FC = () => {
               activeTab === "AVAILABLE_LESSONS" && styles.activeToggleButton,
             ]}
             onPress={() => {
-              console.log("Switching to AVAILABLE_LESSONS tab");
               setActiveTab("AVAILABLE_LESSONS");
             }}
           >
@@ -281,7 +277,7 @@ const StudentMainScreen: React.FC = () => {
           </TouchableOpacity>
         </View>
         <FlatList
-          data={activeTab === "MY_LESSONS" ? allMyLessons : allAvailableLessons}
+          data={sortedLessons}
           renderItem={renderLesson}
           keyExtractor={(item) => item.lessonId || Math.random().toString()}
           ListEmptyComponent={<Text style={styles.emptyText}>No lessons found.</Text>}
@@ -292,7 +288,6 @@ const StudentMainScreen: React.FC = () => {
           visible={isModalVisible}
           title={selectedLesson ? `${selectedLesson.typeLesson} Lesson Details` : ""}
           onClose={() => {
-            console.log("Closing modal");
             setIsModalVisible(false);
           }}
         >

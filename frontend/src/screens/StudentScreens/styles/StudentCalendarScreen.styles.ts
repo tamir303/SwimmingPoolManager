@@ -1,14 +1,13 @@
 // StudentCalendarScreen.styles.ts
 import { StyleSheet } from "react-native";
 
-const HOUR_HEIGHT = 60; // Height per hour
-const START_HOUR = 8; // 8 AM
-const END_HOUR = 22; // 10 PM
-const TOTAL_HOURS = END_HOUR - START_HOUR;
-const DAY_WIDTH = 150; // Width per day
-const HOUR_BAR_WIDTH = 50; // Width of the fixed hour bar
-const FOOTER_HEIGHT = 60; // Footer height
-const MARGIN = 5;
+export const HOUR_HEIGHT = 60; // Height per hour
+export const START_HOUR = 7; // 8 AM
+export const END_HOUR = 24; // 10 PM
+export const TOTAL_HOURS = END_HOUR - START_HOUR; // 14 hours
+export const DAY_WIDTH = 150; // Width per day
+export const HOUR_BAR_WIDTH = 50; // Width of the fixed hour bar
+export const FOOTER_HEIGHT = 60; // Define footer height explicitly
 
 export default StyleSheet.create({
   safeArea: {
@@ -112,11 +111,18 @@ export default StyleSheet.create({
     fontWeight: "500",
     color: "rgba(255, 255, 255, 0.9)",
     marginBottom: 2,
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
+    marginRight: 55
   },
   lessonTime: {
     fontSize: 10,
     fontWeight: "400",
     color: "rgba(255, 255, 255, 0.8)",
+    textShadowColor: "rgba(0, 0, 0, 0.2)",
+    textShadowOffset: { width: 1, height: 1 },
+    textShadowRadius: 1,
   },
   footerContainer: {
     position: "absolute",
@@ -129,7 +135,7 @@ export default StyleSheet.create({
     borderTopColor: "#E0E0E0",
   },
   modalContent: {
-    padding: 20,
+    padding: 10,
     backgroundColor: "#FFF",
     borderRadius: 12,
     shadowColor: "#000",
@@ -208,6 +214,7 @@ export default StyleSheet.create({
   studentTableContainer: {
     marginTop: 10,
     maxHeight: 200,
+    maxWidth: 300
   },
   tableHeader: {
     flexDirection: "row",

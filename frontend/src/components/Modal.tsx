@@ -29,7 +29,7 @@ interface Props {
   /**
    * Title of the modal, displayed at the top.
    */
-  title: string;
+  title?: string;
 
   /**
    * Callback function executed when the modal is closed.
@@ -53,7 +53,7 @@ const CustomModal: React.FC<Props> = ({
     <View style={styles.modalContainer}>
       <View style={styles.modalContent}>
         <ScrollView>
-          <Text style={styles.title}>{title}</Text>
+          {title && <Text style={styles.title}>{title}</Text>}
           {children}
           <TouchableOpacity onPress={onClose} style={styles.closeButton}>
             <Text style={styles.closeText}>Close</Text>

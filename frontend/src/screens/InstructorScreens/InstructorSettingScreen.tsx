@@ -59,7 +59,7 @@ const InstructorScreen: React.FC = () => {
           const instructorData = await InstructorService.getInstructorById(user.id);
           setUserInstructor(instructorData);
         } catch (error) {
-          showAlert(`Failed to load your profile. ${err?.response.data.error || "Internal Error!"}`);
+          // showAlert(`Failed to load your profile. ${err?.response.data.error || "Internal Error!"}`);
         }
       }
     };

@@ -263,7 +263,7 @@ const StudentCalendarScreen: React.FC = () => {
               <Icon name="user" size={12} color="#FFF" /> {getInstructorNameById(lesson.instructorId)}
             </Text>
             <Text style={styles.lessonType} numberOfLines={1}>
-              <Icon name="swimmer" size={14} color="#FFF" style={{ marginRight: 5 }} /> {formatSpecialty(lesson.typeLesson) || "Lesson"}
+              {formatSpecialty(lesson.typeLesson) || "Lesson"}
             </Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -289,24 +289,20 @@ const StudentCalendarScreen: React.FC = () => {
     }
 
     return (
-      <ScrollView style={styles.studentTableContainer} horizontal>
-        <View>
+        <View style={styles.studentTableContainer}>
           <View style={styles.tableHeader}>
             <Text style={[styles.tableHeaderCell, { width: 100 }]}>Phone</Text>
             <Text style={[styles.tableHeaderCell, { width: 150 }]}>Name</Text>
-            <Text style={[styles.tableHeaderCell, { width: 200 }]}>Preferences</Text>
           </View>
-          {students.map((student, index) => (
-            <View key={student.id || index} style={styles.tableRow}>
-              <Text style={[styles.tableCell, { width: 100 }]}>{student.id}</Text>
-              <Text style={[styles.tableCell, { width: 150 }]}>{student.name}</Text>
-              <Text style={[styles.tableCell, { width: 200 }]}>
-                {student.preferences.map(formatSpecialty).join(", ")}
-              </Text>
-            </View>
-          ))}
+          <ScrollView style={{ paddingBottom: 20 }}>
+            {students.map((student, index) => (
+              <View key={student.id || index} style={styles.tableRow}>
+                <Text style={[styles.tableCell, { width: 100 }]}>{student.id}</Text>
+                <Text style={[styles.tableCell, { width: 150 }]}>{student.name}</Text>
+              </View>
+            ))}
+          </ScrollView>
         </View>
-      </ScrollView>
     );
   };
 
@@ -328,13 +324,6 @@ const StudentCalendarScreen: React.FC = () => {
       </View>
 
       <View style={styles.chartContainer}>
-        <View style={styles.hourBar}>
-          {Array.from({ length: TOTAL_HOURS }).map((_, hourIndex) => (
-            <View key={hourIndex} style={styles.hourBarMarker}>
-              <Text style={styles.hourBarText}>{START_HOUR + hourIndex}:00</Text>
-            </View>
-          ))}
-        </View>
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={{
@@ -348,6 +337,14 @@ const StudentCalendarScreen: React.FC = () => {
             contentContainerStyle={{ width: DAY_WIDTH * 7 }}
             showsHorizontalScrollIndicator={false}
           >
+            <View style={[styles.hourBar, { marginRight: -45 }]}>
+              {Array.from({ length: TOTAL_HOURS }).map((_, hourIndex) => (
+                <View key={hourIndex} style={styles.hourBarMarker}>
+                  <Text style={styles.hourBarText}>{START_HOUR + hourIndex}:00</Text>
+                </View>
+              ))}
+            </View>
+
             <View style={[styles.calendarContainer, { marginLeft: HOUR_BAR_WIDTH }]}>
               {Array.from({ length: 7 }).map((_, dayIndex) => (
                 <View key={dayIndex} style={[styles.dayColumn, { left: dayIndex * DAY_WIDTH }]}>

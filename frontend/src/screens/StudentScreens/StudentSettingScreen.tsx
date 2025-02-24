@@ -38,16 +38,11 @@ const StudentSettingsScreen: React.FC = () => {
     const fetchData = async () => {
       if (user && user.id) {
         try {
-          console.log(`Fetching user ${user.id}`);
           const student: Student = await fetchStudent(user.id);
           setUserStudent(student);
-          console.log("Student data fetched successfully:", student);
         } catch (error) {
-          console.error("Error fetching student data:", error);
-          showAlert("Failed to load your profile. Please try again.");
+          // showAlert(`Failed to load your profile. ${error?.response.data.error || "Internal Error!"}`);
         }
-      } else {
-        console.log("No user or user ID available to fetch student data.");
       }
     };
 
@@ -56,7 +51,6 @@ const StudentSettingsScreen: React.FC = () => {
 
   useEffect(() => {
     if (userStudent) {
-      console.log("Setting initial name and preferences from userStudent:", userStudent);
       setName(userStudent.name);
       setTempPreferences(userStudent.preferences);
       setAvailablePreferences(
@@ -66,45 +60,36 @@ const StudentSettingsScreen: React.FC = () => {
   }, [userStudent]);
 
   useEffect(() => {
-    console.log("Updating available preferences based on tempPreferences:", tempPreferences);
     setAvailablePreferences(Object.values(Swimming).filter((s) => !tempPreferences.includes(s)));
   }, [tempPreferences]);
 
   const handleTogglePreference = (specialty: Swimming) => {
-    console.log("Toggled:", specialty);
     if (tempPreferences.includes(specialty)) {
       setTempPreferences((prev) => prev.filter((s) => s !== specialty));
-      console.log("Removed preference:", specialty, "New tempPreferences:", tempPreferences);
     } else {
       setTempPreferences((prev) => [...prev, specialty]);
-      console.log("Added preference:", specialty, "New tempPreferences:", tempPreferences);
     }
   };
 
   const handleSaveChanges = async () => {
     if (user && user.id) {
       try {
-        console.log("Saving changes for user ID:", user.id, "Data:", { name, preferences: tempPreferences });
         const updatedData = {
           name,
           preferences: tempPreferences,
         };
         await updateStudent(user.id, updatedData);
         setUserStudent({ ...userStudent!, name, preferences: tempPreferences });
-        console.log("Profile updated successfully:", updatedData);
         showAlert("Profile updated successfully!");
       } catch (err) {
-        console.error("Error updating student:", err);
-        showAlert("Failed to update profile. Please try again.");
+        showAlert(`Failed to update profile. ${err?.response.data.error || "Internal Error!"}`);
       }
     } else {
-      console.log("No user or user ID available to save changes.");
-      showAlert("Cannot save changes: User not authenticated.");
+      showAlert(`Cannot save changes: User not authenticated.`);
     }
   };
 
   const handleCancel = () => {
-    console.log("Cancel button pressed, navigating back.");
     navigation.goBack();
   };
 
@@ -125,6 +110,7 @@ const StudentSettingsScreen: React.FC = () => {
             </Text>
             {userStudent.preferences.length > 0 ? (
               <Text style={styles.currentSettingsText}>
+                <Icon name="star" size={12} color="#6C63FF" />
                 Preferences: {userStudent.preferences.map(formatSpecialty).join(", ")}
               </Text>
             ) : (
@@ -143,7 +129,6 @@ const StudentSettingsScreen: React.FC = () => {
           value={name}
           onChangeText={(text) => {
             setName(text);
-            console.log("Name updated to:", text);
           }}
         />
 

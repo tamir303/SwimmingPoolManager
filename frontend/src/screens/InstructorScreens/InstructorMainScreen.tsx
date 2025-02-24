@@ -72,14 +72,12 @@ const MainScreen: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       if (user && user.id && isFocused) {
-        console.log(`Fetching data for user ID: ${user.id}`);
         await fetchLessons();
         try {
           const instructorData = await getInstructorById(user.id);
           setUserInstructor(instructorData);
           console.log("User instructor fetched:", instructorData);
         } catch (error) {
-          console.error("Error fetching user instructor:", error);
           showAlert("Failed to fetch instructor data.");
         }
         try {
@@ -87,18 +85,14 @@ const MainScreen: React.FC = () => {
           setAllInstructors(fetchedInstructors);
           console.log("All instructors fetched:", fetchedInstructors);
         } catch (error) {
-          console.error("Error fetching instructors:", error);
           showAlert("Failed to fetch instructors list.");
         }
-      } else {
-        console.log("User, user ID, or focus missing, skipping fetch.");
       }
     };
     fetchData();
   }, [user, isFocused]);
 
   useEffect(() => {
-    console.log("Filtering lessons based on activeTab:", activeTab);
     filterLessons();
   }, [allLessons, activeTab]);
 
@@ -448,7 +442,6 @@ const MainScreen: React.FC = () => {
 
         <CustomModal
           visible={modalVisible}
-          title={selectedLesson ? "Edit Lesson" : "Create Lesson"}
           onClose={() => {
             console.log("Closing modal");
             setModalVisible(false);

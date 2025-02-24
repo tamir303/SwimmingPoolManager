@@ -178,20 +178,12 @@ export default StyleSheet.create({
   modalContent: {
     padding: 20,
     backgroundColor: "#FFF",
-    borderRadius: 12,
+    borderRadius: 10,
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.2,
     shadowRadius: 4,
     elevation: 5,
-    maxHeight: "80%",
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#333",
-    textAlign: "center",
-    marginBottom: 15,
   },
   detailRow: {
     flexDirection: "row",
@@ -252,5 +244,39 @@ export default StyleSheet.create({
     color: "#999",
     textAlign: "center",
     marginVertical: 10,
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center",
+    marginBottom: 15,
+  },
+  modalLabel: {
+    fontSize: 16,
+    marginVertical: 10,
+    color: "#333",
+    fontWeight: "600",
+  },
+  option: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 5,
+    marginVertical: 2,
+  },
+  optionText: {
+    fontSize: 16,
+    color: "#333",
+  },
+  timePickerContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 10,
+  },
+  saveButton: {
+    marginTop: 20,
+    backgroundColor: "#6C63FF",
   },
 });

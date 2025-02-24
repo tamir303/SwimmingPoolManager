@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   SafeAreaView,
   Dimensions,
+  TouchableWithoutFeedback,
 } from "react-native";
 import { useAuth } from "../../hooks/authContext";
 import Lesson from "../../dto/lesson/lesson.dto";
@@ -22,10 +23,14 @@ import styles, {
   TOTAL_HOURS,
   HOUR_BAR_WIDTH,
   FOOTER_HEIGHT,
-} from "./styles/CalenderScreen.styles"; // Removed DAY_WIDTH from static import
+} from "./styles/CalenderScreen.styles";
 import CustomModal from "../../components/Modal";
 import Student from "../../dto/student/student.dto";
 import useAlert from "../../hooks/useAlert";
+import { Button, RadioButton } from "react-native-paper"; // For modal UI
+import TimePicker from "../../components/TimePicker"; // Assuming you have this
+import { LessonType } from "../../utils/lesson-enum.utils"; // Assuming this exists
+import { DaysOfWeek } from "../../utils/days-week-enum.utils"; // Assuming this exists
 
 const MARGIN = 5;
 
@@ -41,16 +46,14 @@ const formatSpecialty = (specialty: string): string => {
 
 const CalendarScreen: React.FC = () => {
   const { user } = useAuth();
-  const { getLessonsWithinRange } = useLesson();
+  const { getLessonsWithinRange, createLesson } = useLesson(); // Added createLesson
   const { getInstructorById, instructors, fetchInstructors } = useInstructors();
   const { showAlert } = useAlert();
   const navigation = useNavigation();
 
   // State for dynamic dimensions
   const [screenWidth, setScreenWidth] = useState(Dimensions.get("window").width);
-
-  // Calculate DAY_WIDTH dynamically based on screen width
-  const DAY_WIDTH = Math.floor((screenWidth - HOUR_BAR_WIDTH) / 3); // Show ~3 days at a time
+  const DAY_WIDTH = Math.floor((screenWidth - HOUR_BAR_WIDTH) / 3); // Dynamic DAY_WIDTH
 
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const [lessons, setLessons] = useState<Lesson[]>([]);
@@ -62,14 +65,20 @@ const CalendarScreen: React.FC = () => {
     end: new Date(),
   });
 
+  // New states for lesson creation
+  const [isCreatingLesson, setIsCreatingLesson] = useState(false);
+  const [selectedLessonDay, setSelectedLessonDay] = useState<DaysOfWeek | null>(null);
+  const [lessonType, setLessonType] = useState<LessonType | null>(null);
+  const [lessonStartTime, setLessonStartTime] = useState<Date | null>(null);
+  const [lessonEndTime, setLessonEndTime] = useState<Date | null>(null);
+
   // Update screen width on orientation change
   useEffect(() => {
     const updateDimensions = () => {
       setScreenWidth(Dimensions.get("window").width);
     };
-
     const subscription = Dimensions.addEventListener("change", updateDimensions);
-    return () => subscription?.remove(); // Cleanup listener
+    return () => subscription?.remove();
   }, []);
 
   const fetchData = async (start: Date, end: Date) => {
@@ -222,6 +231,86 @@ const CalendarScreen: React.FC = () => {
     );
   };
 
+  // Handle chart background click
+  const handleChartPress = (event: any) => {
+    const { locationX, locationY } = event.nativeEvent;
+    const dayIndex = Math.floor(locationX / DAY_WIDTH);
+    const hourOffset = Math.floor(locationY / HOUR_HEIGHT);
+    const minuteOffset = Math.floor((locationY % HOUR_HEIGHT) / (HOUR_HEIGHT / 60));
+    const selectedHour = START_HOUR + hourOffset;
+    const selectedMinute = minuteOffset;
+
+    // Calculate the date based on the week range
+    const selectedDate = new Date(weekRange.start);
+    selectedDate.setDate(selectedDate.getDate() + dayIndex);
+    selectedDate.setHours(selectedHour, selectedMinute, 0, 0);
+
+    // Set modal state for creating a new lesson
+    setSelectedLessonDay(Object.values(DaysOfWeek)[dayIndex] as DaysOfWeek);
+    setLessonStartTime(selectedDate);
+    setLessonEndTime(new Date(selectedDate.getTime() + 60 * 60 * 1000)); // Default to 1 hour later
+    setIsCreatingLesson(true);
+    setModalVisible(true);
+  };
+
+  // Render day picker (you may need to adjust this based on your implementation)
+  const renderLessonDayPicker = () => {
+    return (
+      <View>
+        {Object.values(DaysOfWeek).map((day) => (
+          <TouchableOpacity
+            key={day}
+            style={[
+              styles.option,
+              selectedLessonDay === day && { backgroundColor: "#E0E0FF" },
+            ]}
+            onPress={() => setSelectedLessonDay(day)}
+          >
+            <Text style={styles.optionText}>{day}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
+
+  // Save the new lesson
+  const handleSaveLesson = async () => {
+    if (!lessonType || !lessonStartTime || !lessonEndTime || !userInstructor || !selectedLessonDay) {
+      showAlert("One or more lesson fields are empty!");
+      return;
+    }
+
+    const dayIndex = Object.values(DaysOfWeek).indexOf(selectedLessonDay);
+    const adjustStartTime = new Date(lessonStartTime);
+    const adjustEndTime = new Date(lessonEndTime);
+
+    // Adjust date to the correct day in the week range
+    const lessonDate = new Date(weekRange.start);
+    lessonDate.setDate(lessonDate.getDate() + dayIndex);
+    adjustStartTime.setFullYear(lessonDate.getFullYear(), lessonDate.getMonth(), lessonDate.getDate());
+    adjustEndTime.setFullYear(lessonDate.getFullYear(), lessonDate.getMonth(), lessonDate.getDate());
+
+    try {
+      const newLesson = {
+        typeLesson: lessonType,
+        instructorId: userInstructor.id,
+        specialties: userInstructor.specialties,
+        startAndEndTime: {
+          startTime: adjustStartTime,
+          endTime: adjustEndTime,
+        },
+        students: [],
+      };
+      await createLesson(newLesson, dayIndex);
+      showAlert("Lesson Created!");
+      await fetchData(weekRange.start, weekRange.end); // Refresh lessons
+      setModalVisible(false);
+      setIsCreatingLesson(false);
+    } catch (err) {
+      showAlert(`Failed to create lesson. ${err?.response.data.error || "Internal Error!"}`);
+    }
+  };
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.header}>
@@ -240,7 +329,6 @@ const CalendarScreen: React.FC = () => {
       </View>
 
       <View style={styles.chartContainer}>
-        {/* Scrollable Gantt Chart */}
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={{ height: TOTAL_HOURS * HOUR_HEIGHT + FOOTER_HEIGHT, paddingBottom: FOOTER_HEIGHT }}
@@ -248,107 +336,111 @@ const CalendarScreen: React.FC = () => {
         >
           <ScrollView
             horizontal
-            contentContainerStyle={{ width: HOUR_BAR_WIDTH + DAY_WIDTH * 7 }} // Adjusted for dynamic DAY_WIDTH
+            contentContainerStyle={{ width: HOUR_BAR_WIDTH + DAY_WIDTH * 7 }}
             showsHorizontalScrollIndicator={false}
           >
-            <View style={{ flexDirection: "row" }}>
-              {/* Hour Bar */}
-              <View style={[styles.hourBar, { width: HOUR_BAR_WIDTH, marginRight: 0 }]}>
-                {Array.from({ length: TOTAL_HOURS }).map((_, hourIndex) => (
-                  <View key={hourIndex} style={[styles.hourBarMarker, { height: HOUR_HEIGHT }]}>
-                    <Text style={styles.hourBarText}>
-                      {START_HOUR + hourIndex}:00
-                    </Text>
-                  </View>
-                ))}
-              </View>
-
-              {/* Gantt Chart */}
-              <View style={[styles.calendarContainer, { marginLeft: 0 }]}>
-                {Array.from({ length: 7 }).map((_, dayIndex) => (
-                  <View
-                    key={dayIndex}
-                    style={[
-                      styles.dayColumn,
-                      { left: dayIndex * DAY_WIDTH, width: DAY_WIDTH },
-                      dayIndex % 2 === 0 ? styles.dayColumnEven : styles.dayColumnOdd,
-                    ]}
-                  >
-                    <View style={styles.dayHeader}>
-                      <Text style={styles.dayText}>
-                        {new Date(
-                          weekRange.start.getTime() + dayIndex * 86400000
-                        ).toLocaleDateString("en-US", { weekday: "short" })}
-                      </Text>
-                      <Text style={styles.dateText}>
-                        {new Date(
-                          weekRange.start.getTime() + dayIndex * 86400000
-                        ).getDate()}
+            <TouchableWithoutFeedback onPress={handleChartPress}>
+              <View style={{ flexDirection: "row" }}>
+                {/* Hour Bar */}
+                <View style={[styles.hourBar, { width: HOUR_BAR_WIDTH, marginRight: 0 }]}>
+                  {Array.from({ length: TOTAL_HOURS }).map((_, hourIndex) => (
+                    <View key={hourIndex} style={[styles.hourBarMarker, { height: HOUR_HEIGHT }]}>
+                      <Text style={styles.hourBarText}>
+                        {START_HOUR + hourIndex}:00
                       </Text>
                     </View>
-                  </View>
-                ))}
+                  ))}
+                </View>
 
-                {calculateLessonPositions().map((lesson) => {
-                  const start = new Date(lesson.startAndEndTime.startTime);
-                  const end = new Date(lesson.startAndEndTime.endTime);
-                  const dayIndex = Math.floor(
-                    (start.getTime() - weekRange.start.getTime()) / (1000 * 60 * 60 * 24)
-                  );
-                  const startHour = start.getHours() + start.getMinutes() / 60;
-                  const endHour = end.getHours() + end.getMinutes() / 60;
-
-                  if (startHour >= END_HOUR || endHour <= START_HOUR) {
-                    return null;
-                  }
-
-                  const adjustedStartHour = Math.max(startHour, START_HOUR);
-                  const adjustedEndHour = Math.min(endHour, END_HOUR);
-                  const top = (adjustedStartHour - START_HOUR) * HOUR_HEIGHT;
-                  const height = (adjustedEndHour - adjustedStartHour) * HOUR_HEIGHT;
-                  const left = dayIndex * DAY_WIDTH + lesson.offsetX;
-
-                  return (
-                    <TouchableOpacity
-                      key={lesson.lessonId}
+                {/* Gantt Chart */}
+                <View style={[styles.calendarContainer, { marginLeft: 0 }]}>
+                  {Array.from({ length: 7 }).map((_, dayIndex) => (
+                    <View
+                      key={dayIndex}
                       style={[
-                        styles.lessonBar,
-                        {
-                          left,
-                          top,
-                          width: lesson.adjustedWidth,
-                          height,
-                          backgroundColor:
-                            lesson.instructorId === userInstructor?.id ? "#6C63FF" : "#4CAF50",
-                        },
+                        styles.dayColumn,
+                        { left: dayIndex * DAY_WIDTH, width: DAY_WIDTH },
+                        dayIndex % 2 === 0 ? styles.dayColumnEven : styles.dayColumnOdd,
                       ]}
-                      onPress={() => {
-                        setSelectedLesson(lesson);
-                        setModalVisible(true);
-                      }}
                     >
-                      <View style={styles.lessonContent}>
-                        <Text style={styles.lessonInstructor} numberOfLines={1}>
-                          <Icon name="user" size={12} color="#FFF" /> {getInstructorNameById(lesson.instructorId)}
+                      <View style={styles.dayHeader}>
+                        <Text style={styles.dayText}>
+                          {new Date(
+                            weekRange.start.getTime() + dayIndex * 86400000
+                          ).toLocaleDateString("en-US", { weekday: "short" })}
                         </Text>
-                        <Text style={styles.lessonType} numberOfLines={1}>
-                          {formatSpecialty(lesson.typeLesson)}
-                        </Text>
-                        <Text style={styles.lessonTime} numberOfLines={1}>
-                          {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
-                          {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                        <Text style={styles.dateText}>
+                          {new Date(
+                            weekRange.start.getTime() + dayIndex * 86400000
+                          ).getDate()}
                         </Text>
                       </View>
-                    </TouchableOpacity>
-                  );
-                })}
+                    </View>
+                  ))}
+
+                  {calculateLessonPositions().map((lesson) => {
+                    const start = new Date(lesson.startAndEndTime.startTime);
+                    const end = new Date(lesson.startAndEndTime.endTime);
+                    const dayIndex = Math.floor(
+                      (start.getTime() - weekRange.start.getTime()) / (1000 * 60 * 60 * 24)
+                    );
+                    const startHour = start.getHours() + start.getMinutes() / 60;
+                    const endHour = end.getHours() + end.getMinutes() / 60;
+
+                    if (startHour >= END_HOUR || endHour <= START_HOUR) {
+                      return null;
+                    }
+
+                    const adjustedStartHour = Math.max(startHour, START_HOUR);
+                    const adjustedEndHour = Math.min(endHour, END_HOUR);
+                    const top = (adjustedStartHour - START_HOUR) * HOUR_HEIGHT;
+                    const height = (adjustedEndHour - adjustedStartHour) * HOUR_HEIGHT;
+                    const left = dayIndex * DAY_WIDTH + lesson.offsetX;
+
+                    return (
+                      <TouchableOpacity
+                        key={lesson.lessonId}
+                        style={[
+                          styles.lessonBar,
+                          {
+                            left,
+                            top,
+                            width: lesson.adjustedWidth,
+                            height,
+                            backgroundColor:
+                              lesson.instructorId === userInstructor?.id ? "#6C63FF" : "#4CAF50",
+                          },
+                        ]}
+                        onPress={() => {
+                          setSelectedLesson(lesson);
+                          setModalVisible(true);
+                          setIsCreatingLesson(false); // Ensure we're viewing, not creating
+                        }}
+                      >
+                        <View style={styles.lessonContent}>
+                          <Text style={styles.lessonInstructor} numberOfLines={1}>
+                            <Icon name="user" size={12} color="#FFF" /> {getInstructorNameById(lesson.instructorId)}
+                          </Text>
+                          <Text style={styles.lessonType} numberOfLines={1}>
+                            {formatSpecialty(lesson.typeLesson)}
+                          </Text>
+                          <Text style={styles.lessonTime} numberOfLines={1}>
+                            {start.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })} -{" "}
+                            {end.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                          </Text>
+                        </View>
+                      </TouchableOpacity>
+                    );
+                  })}
+                </View>
               </View>
-            </View>
+            </TouchableWithoutFeedback>
           </ScrollView>
         </ScrollView>
       </View>
 
-      {selectedLesson && (
+      {/* Modal for viewing lesson details */}
+      {selectedLesson && !isCreatingLesson && (
         <CustomModal
           title={`${getInstructorNameById(selectedLesson.instructorId)} - ${formatSpecialty(selectedLesson.typeLesson)}`}
           visible={modalVisible}
@@ -400,6 +492,51 @@ const CalendarScreen: React.FC = () => {
             ) : (
               <Text style={{ paddingTop: 5 }}>No Students Assigned To Lesson!</Text>
             )}
+          </View>
+        </CustomModal>
+      )}
+
+      {/* Modal for creating a new lesson */}
+      {isCreatingLesson && (
+        <CustomModal
+          visible={modalVisible}
+          onClose={() => {
+            setModalVisible(false);
+            setIsCreatingLesson(false);
+          }}
+        >
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Create Lesson</Text>
+            <Text style={styles.modalLabel}>Select Lesson Day:</Text>
+            {renderLessonDayPicker()}
+            <Text style={styles.modalLabel}>Select Lesson Type:</Text>
+            <RadioButton.Group
+              onValueChange={(value) => setLessonType(value as LessonType)}
+              value={lessonType || ""}
+            >
+              {Object.values(LessonType).map((type) => (
+                <View key={type} style={styles.option}>
+                  <RadioButton value={type} color="#6C63FF" />
+                  <Text style={styles.optionText}>{formatSpecialty(type.toString())}</Text>
+                </View>
+              ))}
+            </RadioButton.Group>
+            <Text style={styles.modalLabel}>Select Time:</Text>
+            <View style={styles.timePickerContainer}>
+              <TimePicker
+                label="Start Time"
+                value={lessonStartTime || new Date()}
+                onTimeSelected={(time) => setLessonStartTime(time)}
+              />
+              <TimePicker
+                label="End Time"
+                value={lessonEndTime || new Date()}
+                onTimeSelected={(time) => setLessonEndTime(time)}
+              />
+            </View>
+            <Button mode="contained" onPress={handleSaveLesson} style={styles.saveButton}>
+              Save Lesson
+            </Button>
           </View>
         </CustomModal>
       )}

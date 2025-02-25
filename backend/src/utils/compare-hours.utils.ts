@@ -21,19 +21,33 @@
  * const date6 = new Date("2025-01-16T12:30:00Z");
  * console.log(compareTime(date5, date6)); // Output: 1
  */
-const compareTime = (date1: Date, date2: Date): -1 | 0 | 1 => {
+const compareTime = (date1: Date, date2: Date, type: string | null = null): -1 | 0 | 1 => {
   // Extract hours, minutes, and seconds
   const time1 = {
     hours: date1.getHours(),
     minutes: date1.getMinutes(),
     seconds: date1.getSeconds(),
+    day: date1.getDay(),
+    month: date1.getMonth()
   };
 
   const time2 = {
     hours: date2.getHours(),
     minutes: date2.getMinutes(),
     seconds: date2.getSeconds(),
+    day: date2.getDay(),
+    month: date2.getMonth()
   };
+
+  if (!type) {
+    // Compare months
+    if (time1.month < time2.month) return -1;
+    if (time1.month > time2.month) return 1;
+
+    // Compare days
+    if (time1.day < time2.day) return -1;
+    if (time1.day > time2.day) return 1;
+  }
 
   // Compare hours
   if (time1.hours < time2.hours) return -1;

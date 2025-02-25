@@ -279,4 +279,28 @@ export default StyleSheet.create({
     marginTop: 20,
     backgroundColor: "#6C63FF",
   },
+  dayPickerContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    marginVertical: 10,
+  },
+  dayPickerButton: {
+    padding: 10,
+    borderWidth: 1,
+    borderColor: "#6C63FF",
+    borderRadius: 5,
+    margin: 5,
+    backgroundColor: "#FFF",
+  },
+  dayPickerButtonActive: {
+    backgroundColor: "#6C63FF",
+  },
+  dayPickerText: {
+    color: "#6C63FF",
+    fontWeight: "bold",
+  },
+  dayPickerTextActive: {
+    color: "#FFF",
+  },
 });

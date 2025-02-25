@@ -258,6 +258,11 @@ export default class InstructorService implements InstructorServiceInterface {
         const availStart = new Date(newAvailability.startTime);
         const availEnd = new Date(newAvailability.endTime);
 
+        console.log(`Lesson Start: ${lessonStart}`)
+        console.log(`Lesson End: ${lessonEnd}`)
+        console.log(`Avail Start: ${availStart}`)
+        console.log(`Avail End: ${availEnd}`)
+
         if (lessonStart.getHours() < availStart.getHours()
            || lessonEnd.getHours() > availEnd.getHours()) {
           const dayName = Object.values(DaysOfWeek)[lessonDay] || "Unknown Day";

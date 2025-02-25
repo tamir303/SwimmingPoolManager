@@ -95,8 +95,8 @@ export default class LessonService implements LessonServiceInterface {
         instructorData.availabilities[dayOfTheWeek].startTime;
       const instEndTime = instructorData.availabilities[dayOfTheWeek].endTime;
       if (
-        compareTime(lessonData.startAndEndTime.startTime, instStartTime) < 0 || // Start time is earlier than available
-        compareTime(lessonData.startAndEndTime.endTime, instEndTime) > 0 // End time is later than available
+        compareTime(lessonData.startAndEndTime.startTime, instStartTime, "instructor") < 0 || // Start time is earlier than available
+        compareTime(lessonData.startAndEndTime.endTime, instEndTime, "instructor") > 0 // End time is later than available
       ) {
         logger.error(
           `Instructor is unavailable for the requested time slot: ${JSON.stringify(
@@ -310,8 +310,8 @@ export default class LessonService implements LessonServiceInterface {
         instructorData.availabilities[dayOfTheWeek].startTime;
       const instEndTime = instructorData.availabilities[dayOfTheWeek].endTime;
       if (
-        compareTime(lessonData.startAndEndTime.startTime, instStartTime) < 0 || // Start time is earlier than available
-        compareTime(lessonData.startAndEndTime.endTime, instEndTime) > 0 // End time is later than available
+        compareTime(lessonData.startAndEndTime.startTime, instStartTime, "instructor") < 0 || // Start time is earlier than available
+        compareTime(lessonData.startAndEndTime.endTime, instEndTime, "instructor") > 0 // End time is later than available
       )
         // if the instructor is not teaching in those time slots
         throw new createHttpError.BadRequest(
@@ -575,6 +575,11 @@ export default class LessonService implements LessonServiceInterface {
         ) {
           continue; // Skip the comparison for the same lesson
         }
+
+        console.log(`existingStart: ${existingStart}`)
+        console.log(`existingEnd: ${existingEnd}`)
+        console.log(`targetStart: ${targetStart}`)
+        console.log(`targetEnd: ${targetEnd}`)  
 
         throw new createHttpError.BadRequest(
           `Overlapping lessons detected between new lesson and existing lesson ${existingLesson.lessonId}`

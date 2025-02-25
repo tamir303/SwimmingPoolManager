@@ -255,23 +255,34 @@ const CalendarScreen: React.FC = () => {
 
   // Render day picker (you may need to adjust this based on your implementation)
   const renderLessonDayPicker = () => {
+    const days = Object.values(DaysOfWeek)
+    
     return (
-      <View>
-        {Object.values(DaysOfWeek).map((day) => (
-          <TouchableOpacity
-            key={day}
+    <View style={styles.dayPickerContainer}>
+      {days.map((day) => (
+        <TouchableOpacity
+          key={day}
+          style={[
+            styles.dayPickerButton,
+            selectedLessonDay === day && styles.dayPickerButtonActive,
+          ]}
+          onPress={() => {
+            setSelectedLessonDay(day);
+          }}
+        >
+          <Text
             style={[
-              styles.option,
-              selectedLessonDay === day && { backgroundColor: "#E0E0FF" },
+              styles.dayPickerText,
+              selectedLessonDay === day && styles.dayPickerTextActive,
             ]}
-            onPress={() => setSelectedLessonDay(day)}
           >
-            <Text style={styles.optionText}>{day}</Text>
-          </TouchableOpacity>
-        ))}
-      </View>
+            {day}
+          </Text>
+        </TouchableOpacity>
+      ))}
+    </View>
     );
-  };
+  }
 
   // Save the new lesson
   const handleSaveLesson = async () => {

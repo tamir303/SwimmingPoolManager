@@ -103,6 +103,4 @@ backend/
 ├── Dockerfile         # Docker configuration
 ├── docker-compose.yml # Docker Compose configuration
 └── package.json       # Project metadata and dependencies
-```
-
-**NOTE: The code needs a _.env_ file for running it, please contact [shovalshabi\@gmail.com](mailto:shovalshabi@gmail.com?subject=Request%20for%20ENV%20files) for the _.env_ files**
+``

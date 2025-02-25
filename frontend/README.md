@@ -83,5 +83,3 @@ frontend/
 ## Deployment
 
 The application is hosted locally via ExpoGo. Ensure you have the Expo Go app installed on your device to preview the application.
-
-**NOTE: The code needs a _.env_ file for running it, please contact [shovalshabi\@gmail.com](mailto:shovalshabi@gmail.com?subject=Request%20for%20ENV%20files) for the _.env_ files**

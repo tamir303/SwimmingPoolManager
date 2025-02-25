@@ -9,13 +9,39 @@ const lessonController = new LessonController();
  * @swagger
  * tags:
  *   name: Lessons
- *   description: APIs for managing lessons.
+ *   description: APIs for managing lessons
  */
 
 /**
  * @swagger
  * components:
  *   schemas:
+ *     Student:
+ *       type: object
+ *       required:
+ *         - id
+ *         - name
+ *         - preferences
+ *       properties:
+ *         id:
+ *           type: string
+ *           example: "0501234567"
+ *           description: Unique identifier (phone number) of the student
+ *         name:
+ *           type: string
+ *           example: "Jane Doe"
+ *           description: Full name of the student
+ *         preferences:
+ *           type: array
+ *           items:
+ *             type: string
+ *             enum: ["CHEST", "BACK_STROKE", "FREESTYLE", "BUTTERFLY"]
+ *           example: ["CHEST"]
+ *           description: Swimming preferences of the student
+ *         password:
+ *           type: string
+ *           example: "studentpass123"
+ *           description: Student's password
  *     NewLesson:
  *       type: object
  *       required:
@@ -27,51 +53,27 @@ const lessonController = new LessonController();
  *       properties:
  *         typeLesson:
  *           type: string
- *           enum: [PUBLIC, PRIVATE, MIXED]
- *           description: The type of the lesson.
+ *           enum: ["PUBLIC", "PRIVATE", "MIXED"]
  *           example: "PRIVATE"
+ *           description: Type of the lesson
  *         specialties:
  *           type: array
  *           items:
  *             type: string
- *           description: The specialties covered in the lesson.
+ *             enum: ["CHEST", "BACK_STROKE", "FREESTYLE", "BUTTERFLY"]
  *           example: ["CHEST"]
+ *           description: Swimming specialties covered in the lesson
  *         instructorId:
  *           type: string
- *           description: The ID of the instructor teaching the lesson.
  *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *           description: ID of the instructor teaching the lesson
  *         startAndEndTime:
- *           type: object
- *           properties:
- *             startTime:
- *               type: string
- *               format: date-time
- *               description: Start time of the lesson.
- *               example: "2025-01-15T10:00:00Z"
- *             endTime:
- *               type: string
- *               format: date-time
- *               description: End time of the lesson.
- *               example: "2025-01-15T11:00:00Z"
+ *           $ref: '#/components/schemas/StartAndEndTime'
  *         students:
  *           type: array
  *           items:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *                 description: The name of the student.
- *                 example: "John Doe"
- *               preferences:
- *                 type: array
- *                 items:
- *                   type: string
- *                 description: The preferences of the student.
- *                 example: ["BACK_STROKE"]
- *               phoneNumber:
- *                 type: string
- *                 description: The phone number of the student.
- *                 example: "0502452651"
+ *             $ref: '#/components/schemas/Student'
+ *           description: List of students attending the lesson
  *     Lesson:
  *       type: object
  *       allOf:
@@ -80,8 +82,8 @@ const lessonController = new LessonController();
  *           properties:
  *             lessonId:
  *               type: string
- *               description: Unique identifier for the lesson.
  *               example: "550e8400-e29b-41d4-a716-446655440000"
+ *               description: Unique identifier for the lesson
  */
 
 /**
@@ -96,8 +98,10 @@ const lessonController = new LessonController();
  *         required: true
  *         schema:
  *           type: integer
- *           description: Day of the week (0 = Sunday, 6 = Saturday).
+ *           minimum: 0
+ *           maximum: 6
  *           example: 2
+ *           description: Day of the week (0=Sunday, 6=Saturday)
  *     requestBody:
  *       required: true
  *       content:
@@ -106,11 +110,17 @@ const lessonController = new LessonController();
  *             $ref: '#/components/schemas/NewLesson'
  *     responses:
  *       201:
- *         description: Lesson created successfully.
+ *         description: Lesson created successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Lesson'
+ *       400:
+ *         description: Invalid lesson data or scheduling conflict
+ *       404:
+ *         description: Instructor not found
+ *       500:
+ *         description: Server error
  */
 lessonRouter.post(
   "/",
@@ -132,15 +142,19 @@ lessonRouter.post(
  *         required: true
  *         schema:
  *           type: string
- *           description: The ID of the lesson.
  *           example: "550e8400-e29b-41d4-a716-446655440000"
+ *         description: Unique identifier of the lesson
  *     responses:
  *       200:
- *         description: Successfully retrieved the lesson.
+ *         description: Successfully retrieved the lesson
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Lesson'
+ *       404:
+ *         description: Lesson not found
+ *       500:
+ *         description: Server error
  */
 lessonRouter.get("/:lessonId", (req: Request, res: Response) => {
   lessonController.getLessonById(req, res);
@@ -159,25 +173,29 @@ lessonRouter.get("/:lessonId", (req: Request, res: Response) => {
  *         schema:
  *           type: string
  *           format: date-time
- *           description: Start date of the range.
  *           example: "2025-01-01T00:00:00Z"
+ *           description: Start of the date range
  *       - in: query
  *         name: end
  *         required: true
  *         schema:
  *           type: string
  *           format: date-time
- *           description: End date of the range.
  *           example: "2025-01-31T23:59:59Z"
+ *           description: End of the date range
  *     responses:
  *       200:
- *         description: Successfully retrieved lessons within the range.
+ *         description: Successfully retrieved lessons within the range
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Lesson'
+ *       400:
+ *         description: Invalid date range
+ *       500:
+ *         description: Server error
  */
 lessonRouter.get("/", (req: Request, res: Response) => {
   lessonController.getAllLessonsWithinRange(req, res);
@@ -195,25 +213,29 @@ lessonRouter.get("/", (req: Request, res: Response) => {
  *         required: true
  *         schema:
  *           type: string
- *           description: The ID of the instructor.
- *           example: "12345"
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *         description: Unique identifier of the instructor
  *       - in: query
  *         name: day
  *         required: true
  *         schema:
  *           type: string
  *           format: date
- *           description: The day to filter lessons by.
  *           example: "2025-01-15"
+ *           description: Date to filter lessons (only the day matters)
  *     responses:
  *       200:
- *         description: Successfully retrieved lessons for the instructor on the specified day.
+ *         description: Successfully retrieved lessons for the instructor on the specified day
  *         content:
  *           application/json:
  *             schema:
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Lesson'
+ *       404:
+ *         description: Instructor not found
+ *       500:
+ *         description: Server error
  */
 lessonRouter.get(
   "/instructor/:instructorId/day",
@@ -222,12 +244,37 @@ lessonRouter.get(
   }
 );
 
-lessonRouter.get(
-  "/students/:studentId",
-  (req: Request, res: Response) => {
-    lessonController.getLessonsByStudentId(req, res)
-  }
-)
+/**
+ * @swagger
+ * /lesson/students/{studentId}:
+ *   get:
+ *     summary: Get lessons by student ID
+ *     tags: [Lessons]
+ *     parameters:
+ *       - in: path
+ *         name: studentId
+ *         required: true
+ *         schema:
+ *           type: string
+ *           example: "0501234567"
+ *         description: Unique identifier (phone number) of the student
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved lessons for the student
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Lesson'
+ *       404:
+ *         description: No lessons found for the student
+ *       500:
+ *         description: Server error
+ */
+lessonRouter.get("/students/:studentId", (req: Request, res: Response) => {
+  lessonController.getLessonsByStudentId(req, res);
+});
 
 /**
  * @swagger
@@ -241,8 +288,8 @@ lessonRouter.get(
  *         required: true
  *         schema:
  *           type: string
- *           description: The ID of the lesson.
  *           example: "550e8400-e29b-41d4-a716-446655440000"
+ *         description: Unique identifier of the lesson
  *     requestBody:
  *       required: true
  *       content:
@@ -251,11 +298,17 @@ lessonRouter.get(
  *             $ref: '#/components/schemas/Lesson'
  *     responses:
  *       200:
- *         description: Lesson updated successfully.
+ *         description: Lesson updated successfully
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Lesson'
+ *       400:
+ *         description: Invalid lesson data or scheduling conflict
+ *       404:
+ *         description: Lesson or instructor not found
+ *       500:
+ *         description: Server error
  */
 lessonRouter.put(
   "/:lessonId",
@@ -277,11 +330,23 @@ lessonRouter.put(
  *         required: true
  *         schema:
  *           type: string
- *           description: The ID of the lesson.
  *           example: "550e8400-e29b-41d4-a716-446655440000"
+ *         description: Unique identifier of the lesson
  *     responses:
  *       200:
- *         description: Lesson deleted successfully.
+ *         description: Lesson deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Lesson deleted successfully"
+ *       404:
+ *         description: Lesson not found
+ *       500:
+ *         description: Server error
  */
 lessonRouter.delete("/:lessonId", (req: Request, res: Response) => {
   lessonController.deleteLesson(req, res);
@@ -295,7 +360,17 @@ lessonRouter.delete("/:lessonId", (req: Request, res: Response) => {
  *     tags: [Lessons]
  *     responses:
  *       200:
- *         description: All lessons deleted successfully.
+ *         description: All lessons deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "All lessons deleted successfully"
+ *       500:
+ *         description: Server error
  */
 lessonRouter.delete("/", (req: Request, res: Response) => {
   lessonController.deleteAllLessons(req, res);

@@ -496,11 +496,11 @@ export default class LessonService implements LessonServiceInterface {
     }
 
     if (
-      lessonData.students.length === 1 &&
+      (lessonData.students.length > 1) && 
       lessonData.typeLesson === LessonType.PRIVATE
     ) {
       throw new createHttpError.BadRequest(
-        "Private lesson must contain only sole student."
+        "Private lesson already contains a student."
       );
     }
 

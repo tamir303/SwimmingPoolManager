@@ -19,73 +19,87 @@ const instructorController = new InstructorController();
  *   schemas:
  *     StartAndEndTime:
  *       type: object
+ *       required:
+ *         - startTime
+ *         - endTime
  *       properties:
  *         startTime:
  *           type: string
  *           format: date-time
  *           example: "2025-01-16T09:00:00Z"
- *           description: Start time in ISO 8601 format (UTC).
+ *           description: Start time in ISO 8601 format (UTC), only hours and minutes are relevant
  *         endTime:
  *           type: string
  *           format: date-time
  *           example: "2025-01-16T17:00:00Z"
- *           description: End time in ISO 8601 format (UTC).
+ *           description: End time in ISO 8601 format (UTC), only hours and minutes are relevant
  *     Availability:
  *       type: array
+ *       minItems: 7
+ *       maxItems: 7
  *       items:
  *         oneOf:
  *           - type: integer
  *             example: -1
- *             description: Indicates unavailability for the day.
+ *             description: Indicates unavailability for the day
  *           - $ref: '#/components/schemas/StartAndEndTime'
- *       description: Array of 7 entries representing availability for each day of the week (0-Sunday, 6-Saturday).
- *       example: [
- *         -1,
- *         -1,
- *         { "startTime": "2025-01-16T09:00:00Z", "endTime": "2025-01-16T17:00:00Z" },
- *         -1,
- *         -1,
- *         -1,
- *         -1
- *       ]
+ *       description: Array of 7 entries representing weekly availability (0-Sunday, 6-Saturday)
+ *       example: [-1, {"startTime": "2025-01-16T09:00:00Z", "endTime": "2025-01-16T17:00:00Z"}, -1, -1, -1, -1, -1]
  *     Instructor:
  *       type: object
+ *       required:
+ *         - id
+ *         - name
+ *         - specialties
+ *         - availabilities
+ *         - password
  *       properties:
- *         instructorId:
+ *         id:
  *           type: string
  *           example: "123e4567-e89b-12d3-a456-426614174000"
- *           description: Unique identifier for the instructor.
+ *           description: Unique identifier for the instructor
  *         name:
  *           type: string
  *           example: "John Doe"
- *           description: Full name of the instructor.
+ *           description: Full name of the instructor
  *         specialties:
  *           type: array
  *           items:
  *             type: string
- *           example: ["BACK_STROKE", "CHEST"]
- *           description: List of specialties the instructor can teach.
+ *             enum: ["CHEST", "BACK_STROKE", "FREESTYLE", "BUTTERFLY"]  # Adjust based on your Swimming enum
+ *           example: ["CHEST", "BACK_STROKE"]
+ *           description: List of swimming specialties the instructor can teach
  *         availabilities:
  *           $ref: '#/components/schemas/Availability'
+ *         password:
+ *           type: string
+ *           example: "securepassword123"
+ *           description: Instructor's password
  *     NewInstructor:
  *       type: object
  *       required:
  *         - name
  *         - specialties
  *         - availabilities
+ *         - password
  *       properties:
  *         name:
  *           type: string
  *           example: "John Doe"
- *           description: Full name of the new instructor.
+ *           description: Full name of the new instructor
  *         specialties:
  *           type: array
  *           items:
  *             type: string
- *           example: ["BACK_STROKE", "CHEST"]
- *           description: List of specialties the new instructor can teach.
+ *             enum: ["CHEST", "BACK_STROKE", "FREESTYLE", "BUTTERFLY"]
+ *           example: ["CHEST", "BACK_STROKE"]
+ *           description: List of swimming specialties the new instructor can teach
  *         availabilities:
  *           $ref: '#/components/schemas/Availability'
+ *         password:
+ *           type: string
+ *           example: "securepassword123"
+ *           description: Instructor's password
  */
 
 /**
@@ -99,7 +113,16 @@ const instructorController = new InstructorController();
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/NewInstructor'
+ *             type: object
+ *             properties:
+ *               newInstructor:
+ *                 $ref: '#/components/schemas/NewInstructor'
+ *               password:
+ *                 type: string
+ *                 example: "securepassword123"
+ *             required:
+ *               - newInstructor
+ *               - password
  *     responses:
  *       201:
  *         description: Instructor successfully registered
@@ -107,6 +130,18 @@ const instructorController = new InstructorController();
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Instructor'
+ *       400:
+ *         description: Invalid instructor data
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Invalid specialty: XYZ"
+ *       500:
+ *         description: Server error
  */
 instructorRouter.post(
   "/",
@@ -116,6 +151,52 @@ instructorRouter.post(
   }
 );
 
+/**
+ * @swagger
+ * /instructor/login:
+ *   post:
+ *     summary: Log in an instructor
+ *     tags: [Instructors]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 example: "123e4567-e89b-12d3-a456-426614174000"
+ *                 description: Instructor's unique identifier
+ *               password:
+ *                 type: string
+ *                 example: "securepassword123"
+ *                 description: Instructor's password
+ *             required:
+ *               - id
+ *               - password
+ *     responses:
+ *       201:
+ *         description: Instructor logged in successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Instructor'
+ *       401:
+ *         description: Unauthorized - Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 error:
+ *                   type: string
+ *                   example: "Incorrect password!"
+ *       404:
+ *         description: Instructor not found
+ *       500:
+ *         description: Server error
+ */
 instructorRouter.post(
   "/login",
   deserializeAvailabilities,
@@ -139,6 +220,8 @@ instructorRouter.post(
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Instructor'
+ *       500:
+ *         description: Server error
  */
 instructorRouter.get("/", async (req: Request, res: Response) => {
   instructorController.getAllInstructors(req, res);
@@ -158,7 +241,10 @@ instructorRouter.get("/", async (req: Request, res: Response) => {
  *           type: array
  *           items:
  *             type: string
- *         example: ["BACK_STROKE", "CHEST"]
+ *             enum: ["CHEST", "BACK_STROKE", "FREESTYLE", "BUTTERFLY"]
+ *           example: ["CHEST", "BACK_STROKE"]
+ *         explode: true
+ *         description: List of specialties to filter by
  *     responses:
  *       200:
  *         description: Successfully retrieved instructors with given specialties
@@ -168,6 +254,10 @@ instructorRouter.get("/", async (req: Request, res: Response) => {
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Instructor'
+ *       400:
+ *         description: Invalid specialties provided
+ *       500:
+ *         description: Server error
  */
 instructorRouter.get("/specialties", async (req: Request, res: Response) => {
   instructorController.getInstructorsBySpecialties(req, res);
@@ -185,24 +275,26 @@ instructorRouter.get("/specialties", async (req: Request, res: Response) => {
  *         required: true
  *         schema:
  *           type: integer
- *           description: Day of the week (0 for Sunday, 6 for Saturday)
+ *           minimum: 0
+ *           maximum: 6
  *           example: 2
+ *           description: Day of the week (0=Sunday, 6=Saturday)
  *       - in: query
  *         name: startTime
  *         required: true
  *         schema:
  *           type: string
  *           format: date-time
- *           description: Start time in ISO 8601 format (e.g., "2025-01-16T09:00:00Z")
  *           example: "2025-01-16T09:00:00Z"
+ *           description: Start time in ISO 8601 format
  *       - in: query
  *         name: endTime
  *         required: true
  *         schema:
  *           type: string
  *           format: date-time
- *           description: End time in ISO 8601 format (e.g., "2025-01-16T17:00:00Z")
  *           example: "2025-01-16T17:00:00Z"
+ *           description: End time in ISO 8601 format
  *     responses:
  *       200:
  *         description: List of instructors available
@@ -212,6 +304,10 @@ instructorRouter.get("/specialties", async (req: Request, res: Response) => {
  *               type: array
  *               items:
  *                 $ref: '#/components/schemas/Instructor'
+ *       400:
+ *         description: Invalid day or time range
+ *       500:
+ *         description: Server error
  */
 instructorRouter.get("/availability", async (req: Request, res: Response) => {
   instructorController.getInstructorsByAvailability(req, res);
@@ -219,17 +315,18 @@ instructorRouter.get("/availability", async (req: Request, res: Response) => {
 
 /**
  * @swagger
- * /instructor/single/{instructorId}:
+ * /instructor/single/{id}:
  *   get:
  *     summary: Get an instructor by ID
  *     tags: [Instructors]
  *     parameters:
  *       - in: path
- *         name: instructorId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *         description: Unique identifier of the instructor
  *     responses:
  *       200:
  *         description: Successfully retrieved instructor
@@ -237,27 +334,29 @@ instructorRouter.get("/availability", async (req: Request, res: Response) => {
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/Instructor'
+ *       404:
+ *         description: Instructor not found
+ *       500:
+ *         description: Server error
  */
-instructorRouter.get(
-  "/single/:id",
-  async (req: Request, res: Response) => {
-    instructorController.getInstructorById(req, res);
-  }
-);
+instructorRouter.get("/single/:id", async (req: Request, res: Response) => {
+  instructorController.getInstructorById(req, res);
+});
 
 /**
  * @swagger
- * /instructor/{instructorId}:
+ * /instructor/{id}:
  *   put:
  *     summary: Update an instructor
  *     tags: [Instructors]
  *     parameters:
  *       - in: path
- *         name: instructorId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *         description: Unique identifier of the instructor
  *     requestBody:
  *       required: true
  *       content:
@@ -267,6 +366,16 @@ instructorRouter.get(
  *     responses:
  *       200:
  *         description: Instructor updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Instructor'
+ *       400:
+ *         description: Invalid data or conflicts with existing lessons
+ *       404:
+ *         description: Instructor not found
+ *       500:
+ *         description: Server error
  */
 instructorRouter.put(
   "/:id",
@@ -278,27 +387,37 @@ instructorRouter.put(
 
 /**
  * @swagger
- * /instructor/{instructorId}:
+ * /instructor/{id}:
  *   delete:
  *     summary: Delete an instructor by ID
  *     tags: [Instructors]
  *     parameters:
  *       - in: path
- *         name: instructorId
+ *         name: id
  *         required: true
  *         schema:
  *           type: string
- *         example: "123e4567-e89b-12d3-a456-426614174000"
+ *           example: "123e4567-e89b-12d3-a456-426614174000"
+ *         description: Unique identifier of the instructor
  *     responses:
  *       200:
  *         description: Instructor deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "Instructor deleted successfully"
+ *       404:
+ *         description: Instructor not found
+ *       500:
+ *         description: Server error
  */
-instructorRouter.delete(
-  "/:instructorId",
-  async (req: Request, res: Response) => {
-    instructorController.deleteInstructor(req, res);
-  }
-);
+instructorRouter.delete("/:id", async (req: Request, res: Response) => {
+  instructorController.deleteInstructor(req, res);
+});
 
 /**
  * @swagger
@@ -309,6 +428,16 @@ instructorRouter.delete(
  *     responses:
  *       200:
  *         description: All instructors deleted successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                   example: "All instructors deleted successfully"
+ *       500:
+ *         description: Server error
  */
 instructorRouter.delete("/", async (req: Request, res: Response) => {
   instructorController.deleteAllInstructors(req, res);

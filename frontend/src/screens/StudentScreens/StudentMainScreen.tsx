@@ -65,34 +65,24 @@ const StudentMainScreen: React.FC = () => {
   }, [user, isFocused]);
 
   useEffect(() => {
-    const fetchMyLessonsData = async () => {
+    const fetchData = async () => {
       if (user && user.id) {
         try {
-          const mylessons = await fetchMyLessons(user.id);
-          setAllMyLessons(mylessons);
+          const myLessons = await fetchMyLessons(user.id);
+          setAllMyLessons(myLessons);
+          
+          const availLessons = await fetchAvailableLessons(user.id);
+          const availableAndNotInMyLessons = availLessons.filter((availLesson) =>
+            !myLessons.some((myLesson) => myLesson.lessonId === availLesson.lessonId)
+          );
+          setAllAvailableLessons(availableAndNotInMyLessons);
         } catch (error) {
-            console.log(`Failed to fetch lessons. ${error?.response.data.error || "Internal Error!"}`);
+          console.log(`Failed to fetch lessons. ${error?.response.data.error || "Internal Error!"}`);
         }
       }
     };
-
-    fetchMyLessonsData();
-  }, [user]);
-
-  useEffect(() => {
-    const fetchLessonData = async () => {
-      if (user && user.id) {
-        try {
-          const availablelessons =  await fetchAvailableLessons(user.id);
-          setAllAvailableLessons(availablelessons);
-        } catch (error) {
-            console.log(`Failed to fetch lessons. ${error?.response.data.error || "Internal Error!"}`);
-        }
-      }
-    };
-
-    fetchLessonData();
-  }, [user]);
+    fetchData();
+  }, [user, isFocused]);
 
   useEffect(() => {
     const fetchInstructorsData = async () => {

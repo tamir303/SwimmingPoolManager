@@ -69,7 +69,7 @@ const StudentCalendarScreen: React.FC = () => {
       setLessons(fetchedLessons);
       setWeekRange({ start, end });
     } catch (error) {
-      console.error("Error fetching lessons:", error);
+      
     }
 
     if (user?.id && !userStudent) {
@@ -83,7 +83,7 @@ const StudentCalendarScreen: React.FC = () => {
         const fetchedMyLessons: Lesson[] = await fetchMyLessons(user.id)
         setMyLessons(fetchedMyLessons)
       } catch (error) {
-        console.error("Error fetching student:", error);
+        
       }
     }
   };

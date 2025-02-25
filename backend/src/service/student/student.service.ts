@@ -8,6 +8,7 @@ import LessonServiceInterface from "../lesson/ILesson.service.js";
 import LessonService from "../lesson/lesson.service.js";
 import { createCustomLogger } from "../../etc/logger.etc.js";
 import path from "path";
+import { Swimming } from "../../utils/swimming-enum.utils.js";
 
 // Initialize logger
 const logger = createCustomLogger({
@@ -53,8 +54,8 @@ export default class StudentService implements StudentServiceInterface {
       const availableLessonsByDate = await this.lessonService.getAllLessonsWithinRange(start, end);
       // Check if any lesson specialty matches one of the student's preferences
       const availableLessonsByDateAndPref = availableLessonsByDate.filter((lesson) =>
-        lesson.specialties.some((specialty) =>
-          requestedStudent.preferences.includes(specialty)
+        requestedStudent.preferences.every((preference: Swimming) =>
+          lesson.specialties.includes(preference)
         )
       );
       if (availableLessonsByDateAndPref.length === 0) {

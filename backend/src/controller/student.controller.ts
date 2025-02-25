@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import StudentService from "../service/student/student.service.js";
 import Student from "../dto/student/student.dto.js";
 import StudentServiceInterface from "../service/student/IStudent.service.js";
+import Lesson from "../dto/lesson/lesson.dto.js";
 
 export default class StudentController {
   private studentService: StudentServiceInterface;
@@ -92,8 +93,8 @@ export default class StudentController {
   async getAvailableLessons(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const updatedStudent = await this.studentService.getAvailableLessons(id);
-      return res.status(200).json(updatedStudent);
+      const availLessons: Lesson[] = await this.studentService.getAvailableLessons(id);
+      return res.status(200).json(availLessons);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }
@@ -102,8 +103,8 @@ export default class StudentController {
   async getMyLessons(req: Request, res: Response): Promise<Response> {
     try {
       const { id } = req.params;
-      const updatedStudent = await this.studentService.getMyLessons(id);
-      return res.status(200).json(updatedStudent);
+      const mylessons: Lesson[] = await this.studentService.getMyLessons(id);
+      return res.status(200).json(mylessons);
     } catch (error: any) {
       return res.status(500).json({ error: error.message });
     }

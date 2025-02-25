@@ -157,5 +157,3 @@ jobs:
         with:
           name: deployment-logs
           path: ./backend/logs
-
-disabled: true

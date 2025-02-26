@@ -38,10 +38,12 @@ const compareTime = (date1: Date, date2: Date, type: string | null = null): -1 |
     day: date2.getDay(),
     month: date2.getDate()
   };
-  
-  if (typeof type === "string") {
+
+  console.log(type)
+  console.log(date1)
+  console.log(date2)
+  if (type === "instructor") {
     // Compare months
-    console.log(time1.month,  time2.month)
     if (time1.month < time2.month) return -1;
     if (time1.month > time2.month) return 1;
 

@@ -102,7 +102,7 @@ export default class StudentService implements StudentServiceInterface {
       }
       // Remove the student from the lesson's students array
       requestedLesson.students = requestedLesson.students.filter((student) => student.id !== studentId);
-      await this.lessonService.updateLesson(lessonId, requestedLesson);
+      await this.lessonService.updateLesson(lessonId, requestedLesson, "student");
       logger.info(`Student ${studentId} left lesson ${lessonId} successfully`);
       return requestedStudent;
     } catch (error: any) {
@@ -124,7 +124,7 @@ export default class StudentService implements StudentServiceInterface {
         throw new createHttpError.Conflict(errorMsg);
       }
       requestedLesson.students.push(requestedStudent);
-      await this.lessonService.updateLesson(lessonId, requestedLesson);
+      await this.lessonService.updateLesson(lessonId, requestedLesson, "student");
       logger.info(`Student ${studentId} joined lesson ${lessonId} successfully`);
       return requestedStudent;
     } catch (error: any) {

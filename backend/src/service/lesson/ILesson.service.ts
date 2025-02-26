@@ -48,7 +48,7 @@ export default interface LessonServiceInterface {
    * @param lessonData - The updated lesson data.
    * @returns A promise that resolves to the updated lesson or `null` if not found.
    */
-  updateLesson(lessonId: string, lessonData: Lesson): Promise<Lesson | null>;
+  updateLesson(lessonId: string, lessonData: Lesson, initiator: "student" | "instructor"): Promise<Lesson | null>;
 
   /**
    * Deletes a lesson by its ID.

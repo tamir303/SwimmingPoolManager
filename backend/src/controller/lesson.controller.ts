@@ -194,7 +194,8 @@ export default class LessonController {
       logger.info(`Updating lesson with data: ${JSON.stringify(lessonData)}`);
       const updatedLesson = await this.lessonService.updateLesson(
         lessonId,
-        lessonData
+        lessonData,
+        "instructor"
       );
       logger.info(`Lesson with ID ${lessonId} updated successfully.`);
       return res.status(200).json(updatedLesson);

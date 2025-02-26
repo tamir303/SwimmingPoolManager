@@ -43,13 +43,21 @@ const studentController = new StudentController();
  *           type: string
  *           example: "studentpass123"
  *           description: Student's password
+ *         typePreference:
+ *           $ref: '#/components/schemas/TypePreference'
+ *           description: The student's lesson type preferences and priorities
  *     NewStudent:
  *       type: object
  *       required:
+ *         - id
  *         - name
  *         - preferences
  *         - password
  *       properties:
+ *         id:
+ *           type: string
+ *           example: "0527410953"
+ *           description: Phone number of the student
  *         name:
  *           type: string
  *           example: "Jane Doe"
@@ -65,6 +73,31 @@ const studentController = new StudentController();
  *           type: string
  *           example: "studentpass123"
  *           description: Student's password
+ *         typePreference:
+ *           $ref: '#/components/schemas/TypePreference'
+ *           description: The student's lesson type preferences and priorities
+ *     TypePreference:
+ *       type: object
+ *       required:
+ *         - preference
+ *       properties:
+ *         preference:
+ *           type: string
+ *           enum: ["PUBLIC", "PRIVATE", "MIXED"]
+ *           example: "PUBLIC"
+ *           description: The preferred lesson type
+ *         priority1:
+ *           type: string
+ *           enum: ["PUBLIC", "PRIVATE", "MIXED"]
+ *           nullable: true
+ *           example: null
+ *           description: First priority alternative lesson type, can be null
+ *         priority2:
+ *           type: string
+ *           enum: ["PUBLIC", "PRIVATE", "MIXED"]
+ *           nullable: true
+ *           example: null
+ *           description: Second priority alternative lesson type, can be null
  */
 
 /**

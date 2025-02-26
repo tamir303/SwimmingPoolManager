@@ -7,6 +7,7 @@ import { LessonType } from "../../src/utils/lesson-enum.utils.js";
 import { Swimming } from "../../src/utils/swimming-enum.utils.js";
 import StartAndEndTime from "../../src/dto/instructor/start-and-end-time.dto.js";
 import createHttpError from "http-errors";
+import TypePreference from "../../src/dto/student/typePreference.dto.js";
 
 const mockLessonRepo = {
   createLesson: jest.fn(),
@@ -44,7 +45,8 @@ describe("LessonService", () => {
   describe("createLesson", () => {
     it("should create a valid lesson", async () => {
       try {
-        const newLesson = new NewLesson(LessonType.PUBLIC, "123", [Swimming.BACK_STROKE], new StartAndEndTime(new Date("2025-01-14T10:00:00Z"), new Date("2025-01-14T11:00:00Z")), [{ name: "Jane Doe", preferences: [Swimming.BACK_STROKE], id: "0502452651", password: "pass123" }]);
+        const newLesson = new NewLesson(LessonType.PUBLIC, "123", [Swimming.BACK_STROKE], new StartAndEndTime(new Date("2025-01-14T10:00:00Z"), new Date("2025-01-14T11:00:00Z")), 
+        [{ name: "Jane Doe", preferences: [Swimming.BACK_STROKE], id: "0502452651", password: "pass123", typePreference: new TypePreference(LessonType.PUBLIC, null, null)}]);
         await service.createLesson(newLesson, 2);
         expect(true).toBe(true);
       } catch (error) {
@@ -54,7 +56,8 @@ describe("LessonService", () => {
 
     it("should throw BadRequest for invalid day", async () => {
       try {
-        const newLesson = new NewLesson(LessonType.PUBLIC, "123", [Swimming.BACK_STROKE], new StartAndEndTime(new Date("2025-01-14T10:00:00Z"), new Date("2025-01-14T11:00:00Z")), [{ name: "Jane Doe", preferences: [Swimming.BACK_STROKE], id: "0502452651", password: "pass123" }]);
+        const newLesson = new NewLesson(LessonType.PUBLIC, "123", [Swimming.BACK_STROKE], new StartAndEndTime(new Date("2025-01-14T10:00:00Z"), new Date("2025-01-14T11:00:00Z")), 
+        [{ name: "Jane Doe", preferences: [Swimming.BACK_STROKE], id: "0502452651", password: "pass123", typePreference: new TypePreference(LessonType.PUBLIC, null, null)}]);
         await service.createLesson(newLesson, -1);
         expect(true).toBe(true);
       } catch (error) {
@@ -87,7 +90,8 @@ describe("LessonService", () => {
   describe("updateLesson", () => {
     it("should successfully update a lesson", async () => {
       try {
-        const lesson = new Lesson("123", LessonType.PUBLIC, [Swimming.BACK_STROKE], "123", new StartAndEndTime(new Date("2025-01-14T10:00:00Z"), new Date("2025-01-14T11:00:00Z")), [{ name: "Jane Doe", preferences: [Swimming.BACK_STROKE], id: "0502452651", password: "pass123" }]);
+        const lesson = new Lesson("123", LessonType.PUBLIC, [Swimming.BACK_STROKE], "123", new StartAndEndTime(new Date("2025-01-14T10:00:00Z"), new Date("2025-01-14T11:00:00Z")), 
+        [{ name: "Jane Doe", preferences: [Swimming.BACK_STROKE], id: "0502452651", password: "pass123", typePreference: new TypePreference(LessonType.PUBLIC, null, null) }]);
         await service.updateLesson("123", lesson);
         expect(true).toBe(true);
       } catch (error) {
@@ -97,7 +101,8 @@ describe("LessonService", () => {
 
     it("should throw NotFound if lesson does not exist", async () => {
       try {
-        const lesson = new Lesson("123", LessonType.PUBLIC, [Swimming.BACK_STROKE], "123", new StartAndEndTime(new Date("2025-01-14T10:00:00Z"), new Date("2025-01-14T11:00:00Z")), [{ name: "Jane Doe", preferences: [Swimming.BACK_STROKE], id: "0502452651", password: "pass123" }]);
+        const lesson = new Lesson("123", LessonType.PUBLIC, [Swimming.BACK_STROKE], "123", new StartAndEndTime(new Date("2025-01-14T10:00:00Z"), new Date("2025-01-14T11:00:00Z")), 
+        [{ name: "Jane Doe", preferences: [Swimming.BACK_STROKE], id: "0502452651", password: "pass123", typePreference: new TypePreference(LessonType.PUBLIC, null, null) }]);
         await service.updateLesson("123", lesson);
         expect(true).toBe(true);
       } catch (error) {

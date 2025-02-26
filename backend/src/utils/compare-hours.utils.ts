@@ -28,7 +28,7 @@ const compareTime = (date1: Date, date2: Date, type: string | null = null): -1 |
     minutes: date1.getMinutes(),
     seconds: date1.getSeconds(),
     day: date1.getDay(),
-    month: date1.getMonth()
+    month: date1.getDate()
   };
 
   const time2 = {
@@ -36,11 +36,12 @@ const compareTime = (date1: Date, date2: Date, type: string | null = null): -1 |
     minutes: date2.getMinutes(),
     seconds: date2.getSeconds(),
     day: date2.getDay(),
-    month: date2.getMonth()
+    month: date2.getDate()
   };
-
-  if (!type) {
+  
+  if (typeof type === "string") {
     // Compare months
+    console.log(time1.month,  time2.month)
     if (time1.month < time2.month) return -1;
     if (time1.month > time2.month) return 1;
 

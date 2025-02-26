@@ -95,8 +95,8 @@ export default class LessonService implements LessonServiceInterface {
         instructorData.availabilities[dayOfTheWeek].startTime;
       const instEndTime = instructorData.availabilities[dayOfTheWeek].endTime;
       if (
-        compareTime(lessonData.startAndEndTime.startTime, instStartTime, "instructor") < 0 || // Start time is earlier than available
-        compareTime(lessonData.startAndEndTime.endTime, instEndTime, "instructor") > 0 // End time is later than available
+        compareTime(lessonData.startAndEndTime.startTime, instStartTime) < 0 || // Start time is earlier than available
+        compareTime(lessonData.startAndEndTime.endTime, instEndTime) > 0 // End time is later than available
       ) {
         logger.error(
           `Instructor is unavailable for the requested time slot: ${JSON.stringify(
@@ -562,8 +562,8 @@ export default class LessonService implements LessonServiceInterface {
       const existingEnd = existingLesson.startAndEndTime.endTime;
 
       // Check if the time ranges overlap using compareTime
-      const startComparison = compareTime(targetStart, existingEnd);
-      const endComparison = compareTime(targetEnd, existingStart);
+      const startComparison = compareTime(targetStart, existingEnd, "instructor");
+      const endComparison = compareTime(targetEnd, existingStart, "instructor");
       
       const isOverlapping = startComparison < 0 && endComparison > 0;
 

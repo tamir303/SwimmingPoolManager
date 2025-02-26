@@ -22,7 +22,7 @@ export default class StudentRepository implements StudentRepositoryInterface {
   async update(studentId: string, studentData: Student): Promise<Student | null> {
     const updatedDoc = await StudentModel.findOneAndUpdate(
       { _id: studentId },
-      { name: studentData.name, preferences: studentData.preferences },
+      { name: studentData.name, preferences: studentData.preferences, typePreference: studentData.typePreference },
       { new: true }
     );
     return updatedDoc ? Student.fromModel(updatedDoc) : null;

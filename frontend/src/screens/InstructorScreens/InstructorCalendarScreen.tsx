@@ -302,6 +302,12 @@ const CalendarScreen: React.FC = () => {
     adjustEndTime.setFullYear(lessonDate.getFullYear(), lessonDate.getMonth(), lessonDate.getDate());
 
     try {
+      const now = new Date()
+      if (adjustStartTime <= now) {
+        showAlert("Cannot create lessons in the past");
+        return;
+      }
+
       const newLesson = {
         typeLesson: lessonType,
         instructorId: userInstructor.id,
@@ -526,7 +532,7 @@ const CalendarScreen: React.FC = () => {
               value={lessonType || ""}
             >
               {Object.values(LessonType).map((type) => (
-                <View key={type} style={styles.option}>
+                type !== LessonType.MIXED && <View key={type} style={styles.option}>
                   <RadioButton value={type} color="#6C63FF" />
                   <Text style={styles.optionText}>{formatSpecialty(type.toString())}</Text>
                 </View>

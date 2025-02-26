@@ -236,11 +236,20 @@ export default class InstructorService implements InstructorServiceInterface {
 
     this.validateInstructorData(instructorData);
 
-    const instructorLessons = await this.lessonRepository.getInstructorLessons(id);
+    const instructorLessons = await this.lessonRepository
+      .getInstructorLessons(id)
+      .then((lessons) => {
+        const now = new Date();
+        return lessons.filter((lesson) => 
+          lesson.startAndEndTime.startTime instanceof Date && lesson.startAndEndTime.startTime >= now
+        );
+      });
+      
     // Check that the new availabilities and specialties do not conflict with existing lessons
     for (const lesson of instructorLessons) {
       // Determine the day index (0 = Sunday, 6 = Saturday) of the lesson
       const lessonDay = lesson.startAndEndTime.startTime.getDay();
+
       const newAvailability = instructorData.availabilities[lessonDay];
         // Check if the lesson's time fits within the new availability window
         if (newAvailability === -1) {

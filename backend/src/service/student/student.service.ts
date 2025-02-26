@@ -9,6 +9,7 @@ import LessonService from "../lesson/lesson.service.js";
 import { createCustomLogger } from "../../etc/logger.etc.js";
 import path from "path";
 import { Swimming } from "../../utils/swimming-enum.utils.js";
+import { LessonType } from "../../utils/lesson-enum.utils.js";
 
 // Initialize logger
 const logger = createCustomLogger({
@@ -51,13 +52,30 @@ export default class StudentService implements StudentServiceInterface {
       const start = new Date();
       const end = new Date(start);
       end.setDate(end.getDate() + 30);
+
+      // Fetch lessons by range of month forward
       const availableLessonsByDate = await this.lessonService.getAllLessonsWithinRange(start, end);
+
       // Check if any lesson specialty matches one of the student's preferences
-      const availableLessonsByDateAndPref = availableLessonsByDate.filter((lesson) =>
+      let availableLessonsByDateAndPref = availableLessonsByDate.filter((lesson) =>
         requestedStudent.preferences.every((preference: Swimming) =>
           lesson.specialties.includes(preference)
         )
       );
+
+      // Check if lesson type matches student lesson preference
+      availableLessonsByDateAndPref = availableLessonsByDateAndPref.filter((lesson) => {
+          if (requestedStudent.typePreference.preference === LessonType.PUBLIC)
+            return lesson.typeLesson === LessonType.PUBLIC
+
+          if (requestedStudent.typePreference.preference === LessonType.PRIVATE)
+            return lesson.typeLesson === LessonType.PRIVATE
+
+          // Else requestedStudent type preference is mixed, return all
+          return true
+        }  
+      )
+
       if (availableLessonsByDateAndPref.length === 0) {
         const errorMsg = "No available lessons found!";
         logger.warn(errorMsg);
@@ -178,11 +196,39 @@ export default class StudentService implements StudentServiceInterface {
     logger.info(`Updating student with id ${studentId}`);
     try {
       const updatedStudent = await this.studentRepository.update(studentId, studentData);
+
       if (!updatedStudent) {
         const errorMsg = `Student with ID ${studentId} not found for update`;
         logger.warn(errorMsg);
-        throw new createHttpError.NotFound(errorMsg);
+        throw new createHttpError.Forbidden(errorMsg);
       }
+
+      const studentLessons: Lesson[] = await this.lessonService.getLessonsByStudentId(studentId);
+
+      // Validate student not in lesson that violates its swimming styles
+      for (const lesson of studentLessons) {
+        const lessonSwimmings = lesson.specialties;
+        const studentSwimmings = studentData.preferences;
+        for (const swimming of studentSwimmings) {
+          if (!lessonSwimmings.includes(swimming)) {
+            const errorMsg = `Student's lesson ${lesson.lessonId} doesn't contain ${swimming}, leave lesson to update student!`;
+            logger.warn(errorMsg);
+            throw new createHttpError.Forbidden(errorMsg);
+          }
+        }
+      }
+
+      // Validate student not in lesson that violates its lesson type preference
+      for (const lesson of studentLessons) {
+        const lessonType = lesson.typeLesson;
+        const studentLessonTypePref = studentData.typePreference.preference;
+        if (studentLessonTypePref !== LessonType.MIXED && lessonType !== studentLessonTypePref) {
+          const errorMsg = `Student enrolled in lesson ${lesson.lessonId} which is ${lessonType}, leave lesson to update student!`;
+          logger.warn(errorMsg);
+          throw new createHttpError.NotFound(errorMsg);
+        }
+      }
+
       logger.info(`Student with id ${studentId} updated successfully`);
       return updatedStudent;
     } catch (error: any) {

@@ -6,6 +6,7 @@ import { Swimming } from "../../src/utils/swimming-enum.utils.js";
 import { LessonType } from "../../src/utils/lesson-enum.utils.js";
 import StartAndEndTime from "../../src/dto/instructor/start-and-end-time.dto.js";
 import createHttpError from "http-errors";
+import TypePreference from "../../src/dto/student/typePreference.dto.js";
 
 const mockStudentRepo = {
   create: jest.fn(),
@@ -34,7 +35,7 @@ describe("StudentService", () => {
 
   describe("createStudent", () => {
     it("should create a new student", async () => {
-      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123");
+      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123", new TypePreference(LessonType.PUBLIC, null, null));
       mockStudentRepo.create.mockResolvedValue(student);
 
       const result = await service.createStudent(student);
@@ -44,7 +45,7 @@ describe("StudentService", () => {
 
   describe("loginStudent", () => {
     it("should login a student with correct credentials", async () => {
-      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123");
+      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123", new TypePreference(LessonType.PUBLIC, null, null));
       mockStudentRepo.findById.mockResolvedValue(student);
 
       const result = await service.loginStudent("0501234567", "pass123");
@@ -52,7 +53,7 @@ describe("StudentService", () => {
     });
 
     it("should throw Unauthorized for incorrect password", async () => {
-      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123");
+      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123", new TypePreference(LessonType.PUBLIC, null, null));
       mockStudentRepo.findById.mockResolvedValue(student);
 
       await expect(service.loginStudent("0501234567", "wrongpass")).rejects.toThrow(createHttpError.Unauthorized);
@@ -61,7 +62,7 @@ describe("StudentService", () => {
 
   describe("getMyLessons", () => {
     it("should retrieve enrolled lessons", async () => {
-      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123");
+      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123", new TypePreference(LessonType.PUBLIC, null, null));
       const lesson = new Lesson(
         "123",
         LessonType.PUBLIC,
@@ -80,7 +81,7 @@ describe("StudentService", () => {
 
   describe("getAvailableLessons", () => {
     it("should retrieve available lessons matching preferences", async () => {
-      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123");
+      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123", new TypePreference(LessonType.PUBLIC, null, null));
       const lesson = new Lesson(
         "123",
         LessonType.PUBLIC,
@@ -99,7 +100,7 @@ describe("StudentService", () => {
 
   describe("joinLesson", () => {
     it("should join a lesson", async () => {
-      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123");
+      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123", new TypePreference(LessonType.PUBLIC, null, null));
       const lesson = new Lesson("123", LessonType.PUBLIC, [Swimming.CHEST], "456", new StartAndEndTime(new Date(), new Date()), []);
       mockStudentRepo.findById.mockResolvedValue(student);
       mockLessonService.getLessonById.mockResolvedValue(lesson);
@@ -112,7 +113,7 @@ describe("StudentService", () => {
 
   describe("leaveLesson", () => {
     it("should leave a lesson", async () => {
-      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123");
+      const student = new Student("0501234567", "Jane Doe", [Swimming.CHEST], "pass123", new TypePreference(LessonType.PUBLIC, null, null));
       const lesson = new Lesson("123", LessonType.PUBLIC, [Swimming.CHEST], "456", new StartAndEndTime(new Date(), new Date()), [student]);
       mockStudentRepo.findById.mockResolvedValue(student);
       mockLessonService.getLessonById.mockResolvedValue(lesson);

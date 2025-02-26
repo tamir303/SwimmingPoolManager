@@ -200,4 +200,49 @@ export default StyleSheet.create({
     fontSize: 16,
     marginTop: 20,
   },
+  lessonTypeContainer: {
+    marginVertical: 15,
+    backgroundColor: "#FFF", // Added for consistency with other sections
+    padding: 15,
+    borderRadius: 8,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.1,
+    elevation: 2,
+  },
+  radioButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 12, // Increased spacing for readability
+  },
+  radioText: {
+    fontSize: 16,
+    color: "#333",
+    marginLeft: 10, // Adjusted for better alignment with RadioButton
+    fontWeight: "500",
+  },
+  priorityContainer: {
+    marginLeft: 20, // Indent under Mixed
+    marginTop: 10,
+  },
+  subSectionTitle: {
+    fontSize: 16,
+    fontWeight: "500",
+    color: "#34495E",
+    marginTop: 10,
+    marginBottom: 5,
+  },
+  pickerContainer: {
+    backgroundColor: "#F9FBFC",
+    borderRadius: 8,
+    borderColor: "#DDD",
+    borderWidth: 1,
+    marginBottom: 15,
+    overflow: "hidden",
+  },
+  picker: {
+    height: 160,
+    color: "#333",
+    marginTop: 2
+  },
 });

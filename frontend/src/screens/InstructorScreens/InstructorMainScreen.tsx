@@ -116,8 +116,8 @@ const MainScreen: React.FC = () => {
   const filterLessons = () => {
     const now = new Date();
     const filtered = allLessons.filter((lesson) => {
-      const startTime = new Date(lesson.startAndEndTime.startTime);
       const endTime = new Date(lesson.startAndEndTime.endTime);
+
       if (activeTab === "MY") {
         // Show lessons that haven't ended yet (Active or In Progress)
         return endTime >= now;
@@ -126,6 +126,13 @@ const MainScreen: React.FC = () => {
         return endTime < now;
       }
     });
+
+    // Sort by newest to oldest
+    filtered.sort((a, b) => {
+      const AlessonStart = new Date(a.startAndEndTime.startTime);
+      const BlessonStart = new Date(b.startAndEndTime.startTime);
+      return BlessonStart.getDate() - AlessonStart.getDate()
+    })
     setFilteredLessons(filtered);
     console.log(`Filtered lessons for ${activeTab}:`, filtered);
   };
@@ -460,7 +467,7 @@ const MainScreen: React.FC = () => {
               value={lessonType || "undefined"}
             >
               {Object.values(LessonType).map((type) => (
-                <View key={type} style={styles.option}>
+                type !== LessonType.MIXED && <View key={type} style={styles.option}>
                   <RadioButton value={type} color="#6C63FF" />
                   <Text style={styles.optionText}>{formatSpecialty(type.toString())}</Text>
                 </View>

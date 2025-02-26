@@ -56,8 +56,8 @@ const instructorController = new InstructorController();
  *       properties:
  *         id:
  *           type: string
- *           example: "123e4567-e89b-12d3-a456-426614174000"
- *           description: Unique identifier for the instructor
+ *           example: "0527410953"
+ *           description: Phone number of instructor
  *         name:
  *           type: string
  *           example: "John Doe"
@@ -78,11 +78,16 @@ const instructorController = new InstructorController();
  *     NewInstructor:
  *       type: object
  *       required:
+ *         - id
  *         - name
  *         - specialties
  *         - availabilities
  *         - password
  *       properties:
+ *         id:
+ *           type: string
+ *           example: "0527410953"
+ *           description: Phone number of instructor
  *         name:
  *           type: string
  *           example: "John Doe"

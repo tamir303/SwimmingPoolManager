@@ -9,6 +9,8 @@ import React, {
 import Student from "../dto/student/student.dto";
 import StudentService from "../services/student.service";
 import useAlert from "./useAlert";
+import TypePreference from "../dto/student/typePreference.dto";
+import { LessonType } from "../utils/lesson-enum.utils";
   
   /**
    * Represents the user type in the system.
@@ -75,6 +77,8 @@ import useAlert from "./useAlert";
       password: string,
     ): Promise<UserType> => {
       var flag = true
+      const { showAlert } = useAlert()
+
       try {
         await StudentService.getStudentById(phone);
       } catch (err) {
@@ -104,9 +108,8 @@ import useAlert from "./useAlert";
 
           return "Instructor"
         }
-    
-        // Optionally: store token in AsyncStorage, Redux, or similar.
       } catch (err) {
+        showAlert("Phone number or password are incorrect!")
         throw Error(`User with phone number ${phone} doesn't exist!`);
       }
     };    
@@ -164,7 +167,8 @@ import useAlert from "./useAlert";
           const newStudent: Student = {
             id: phone,
             name,
-            preferences: []
+            preferences: [],
+             typePreference: new TypePreference(LessonType.PUBLIC, null, null)
           };
           const createdStudent: Student = await StudentService.createStudent(
             password,

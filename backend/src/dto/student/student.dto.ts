@@ -1,5 +1,6 @@
 import { IStudent } from "../../model/student.model.js";
 import { Swimming } from "../../utils/swimming-enum.utils.js";
+import TypePreference from "./typePreference.dto.js";
 
 /**
  * Student Class
@@ -17,12 +18,13 @@ export default class Student {
     public id: string,
     public name: string,
     public preferences: Swimming[],
-    public password: string
+    public password: string,
+    public typePreference: TypePreference
   ) {}
 
   // Convert a Mongoose model document to a Student instance.
   static fromModel(model: IStudent): Student {
-    return new Student(model._id, model.name, model.preferences, model.password);
+    return new Student(model._id, model.name, model.preferences, model.password, model.typePreference);
   }
 
   // Convert a Student instance to an object suitable for saving in MongoDB.
@@ -31,7 +33,8 @@ export default class Student {
       _id: student.id,
       name: student.name,
       preferences: student.preferences,
-      password: student.password
+      password: student.password,
+      typePreference: student.typePreference
     };
   }
 }

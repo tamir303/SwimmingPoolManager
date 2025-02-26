@@ -19,6 +19,7 @@ import Lesson from "../../dto/lesson/lesson.dto";
 import CustomCard from "../../components/Card";
 import CustomModal from "../../components/Modal";
 import useAlert from "../../hooks/useAlert";
+import { LessonType } from "../../utils/lesson-enum.utils";
 
 type TabOption = "MY_LESSONS" | "AVAILABLE_LESSONS";
 
@@ -119,6 +120,7 @@ const StudentMainScreen: React.FC = () => {
           setAllMyLessons((prev) =>
             prev.filter((lesson) => lesson.lessonId !== selectedLesson.lessonId)
           );
+          setAllAvailableLessons((prev) => [...prev, selectedLesson])
         } else {
           await joinLesson(userStudent.id, selectedLesson.lessonId);
           showAlert("You have successfully joined the lesson!");
@@ -181,11 +183,59 @@ const StudentMainScreen: React.FC = () => {
 
   const sortedLessons = useMemo(() => {
     const lessons = activeTab === "MY_LESSONS" ? allMyLessons : allAvailableLessons;
-    return [...lessons].sort((a, b) => {
+    let sortedByDate = [...lessons].sort((a, b) => {
       const startA = new Date(a.startAndEndTime.startTime).getTime();
       const startB = new Date(b.startAndEndTime.startTime).getTime();
       return startA - startB;
     });
+
+    if (userStudent?.typePreference.preference !== LessonType.MIXED)
+      return sortedByDate
+
+    let sortedByDateAndPreference = [...sortedByDate].sort((a, b) => {
+      const prefA = a.typeLesson;
+      const prefB = b.typeLesson;
+    
+      // Define preference order based on user's priority1 and priority2 when MIXED
+      const preferenceOrder = {
+        [LessonType.MIXED]: 2, // Lower priority unless matched by priority1/priority2
+        [LessonType.PUBLIC]:
+          userStudent?.typePreference.priority1 === LessonType.PUBLIC
+            ? 0  // Highest if priority1 is PUBLIC
+            : userStudent?.typePreference.priority2 === LessonType.PUBLIC
+            ? 1  // Middle if priority2 is PUBLIC
+            : 2, // Lowest if neither
+        [LessonType.PRIVATE]:
+          userStudent?.typePreference.priority1 === LessonType.PRIVATE
+            ? 0  // Highest if priority1 is PRIVATE
+            : userStudent?.typePreference.priority2 === LessonType.PRIVATE
+            ? 1  // Middle if priority2 is PRIVATE
+            : 2, // Lowest if neither
+      };
+    
+      // Primary sort by preference order
+      const prefComparison = preferenceOrder[prefA] - preferenceOrder[prefB];
+      if (prefComparison !== 0) {
+        return prefComparison;
+      }
+    
+      // If both are MIXED, sort by their own priority1 then priority2
+      if (prefA === LessonType.MIXED && prefB === LessonType.MIXED) {
+        const pri1A = a.typeLesson || LessonType.PUBLIC; // Fallback
+        const pri1B = b.typeLesson || LessonType.PUBLIC;
+        if (pri1A !== pri1B) {
+          return pri1A === LessonType.PUBLIC ? -1 : 1; // PUBLIC before PRIVATE
+        }
+    
+        const pri2A = a.typeLesson || LessonType.PRIVATE;
+        const pri2B = b.typeLesson || LessonType.PRIVATE;
+        return pri2A === LessonType.PUBLIC ? -1 : 1; // PUBLIC before PRIVATE
+      }
+    
+      return 0; // Maintain date order if all else equal
+    });
+
+    return sortedByDateAndPreference
   }, [activeTab, allMyLessons, allAvailableLessons]);
 
   const HeaderUserInfo = () => (
@@ -195,9 +245,35 @@ const StudentMainScreen: React.FC = () => {
           <Text style={styles.userName}>
             <Icon name="user" size={20} color="#6C63FF" /> {userStudent.name}
           </Text>
+
+          {userStudent.typePreference?.preference !== LessonType.MIXED ?
+            (
+              <View>
+                <Text style={styles.sectionHeader}>
+                  <Icon name="list-alt" size={12} color="#6C63FF" /> Lesson Type:
+                </Text>
+                <Text style={styles.sectionText}>
+                  {formatSpecialty(userStudent.typePreference.preference)}
+                </Text>
+              </View>
+            ) : (
+              <View>
+                <Text style={styles.sectionHeader}>
+                  <Icon name="list-alt" size={12} color="#6C63FF" /> Lesson Type:
+                </Text>
+                <Text style={styles.sectionText}>
+                  <Icon name="list-alt" size={12} color="#6C63FF" /> {formatSpecialty(LessonType.MIXED)} (Priority: {formatSpecialty(userStudent.typePreference?.priority1 || LessonType.PUBLIC)}
+                )
+                </Text>
+              </View>
+            )
+          }
+
           {userStudent.preferences.length > 0 ? (
             <View>
-              <Text style={styles.sectionHeader}>Specialties</Text>
+              <Text style={styles.sectionHeader}>
+                <Icon name="star" size={12} color="#6C63FF" /> Specialties
+              </Text>
               <Text style={styles.sectionText}>
                 {userStudent.preferences.map(formatSpecialty).join(", ")}
               </Text>

@@ -16,7 +16,7 @@ This repository contains a full-stack application designed to manage the back-of
 ## Structure
 
 - **Backend**: A Node.js + Express.js server application with MongoDB for data storage.
-- **Frontend**: A React Native application hosted with ExpoGo, featuring Redux for state management.
+- **Frontend**: A React Native application hosted with ExpoGo.
 
 ---
 
